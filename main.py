@@ -1,5 +1,8 @@
 import csv
 import statistics
+import matplotlib.pyplot as plt
+import pydicom
+import pydicom.data
 
 def process_csv(filename_in):
     with open(filename_in, newline='') as file:
@@ -178,16 +181,10 @@ def strip_duplicate_imaging(rows):
 
 
 
-
-
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     #filename = 'Data/AxialWithCDR18981.csv'
     #process_csv(filename)
 
-    import matplotlib.pyplot as plt
-    import pydicom
-    import pydicom.data
 
     # Full path of the DICOM file is passed in base
     base = r"C:\Users\evanh\Documents\Auto Network Storage\Fall 2022\Machine Learning\Project\Source\Example\941_S_5193\AXIAL_T2_STAR\2015-04-02_11_01_34.0\I673865"
@@ -201,3 +198,4 @@ if __name__ == '__main__':
 
     plt.imshow(ds.pixel_array, cmap=plt.cm.bone)  # set the color map to bone
     plt.show()
+    plt.imsave("exampledicom.jpg", ds.pixel_array, cmap=plt.cm.bone)
