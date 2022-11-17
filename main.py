@@ -1,5 +1,8 @@
 import csv
 import statistics
+import matplotlib.pyplot as plt
+import pydicom
+import pydicom.data
 
 def process_csv(filename_in):
     with open(filename_in, newline='') as file:
@@ -201,10 +204,10 @@ if __name__ == '__main__':
     ## Getting a specific file:
     # enter DICOM image name for pattern
     # result is a list of 1 element
-    # filename = pydicom.data.data_manager.get_files(base, pass_dicom)[0]
+    filename = pydicom.data.data_manager.get_files(base, pass_dicom)[0]
 
-    ds = load_data(base)
-    print(type(ds))
-    
-    plt.imshow(ds[0], cmap=plt.cm.bone) # set the color map to bone
+    ds = pydicom.dcmread(filename)
+
+    plt.imshow(ds.pixel_array, cmap=plt.cm.bone)  # set the color map to bone
     plt.show()
+    plt.imsave("exampledicom.jpg", ds.pixel_array, cmap=plt.cm.bone)
