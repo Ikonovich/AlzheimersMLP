@@ -176,28 +176,35 @@ def strip_duplicate_imaging(rows):
 
     return subjects, duplicate_count
 
+# Takes a folder path as input
+# Returns pixel arrays of the DICOM images contained within the folder
+def load_data(folder_path):
+    # use the folder containing the images you want to load
+    # pattern "*" means all the images in the folder
+    file_names = pydicom.data.data_manager.get_files(base, "*")
+    ds = np.array([dcmread(file).pixel_array for file in file_names])
+    return ds
 
-
-
-
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     #filename = 'Data/AxialWithCDR18981.csv'
     #process_csv(filename)
 
+    import numpy as np
     import matplotlib.pyplot as plt
-    import pydicom
+    from pydicom import dcmread
     import pydicom.data
 
     # Full path of the DICOM file is passed in base
-    base = r"C:\Users\evanh\Documents\Auto Network Storage\Fall 2022\Machine Learning\Project\Source\Example\941_S_5193\AXIAL_T2_STAR\2015-04-02_11_01_34.0\I673865"
+    base = r"Example\941_S_5193\AXIAL_T2_STAR\2015-04-02_11_01_34.0\I673865"
     pass_dicom = "ADNI_941_S_5193_MR_AXIAL_T2_STAR__br_raw_20160407105052903_24_S412718_I673865.dcm"
 
+    ## Getting a specific file:
     # enter DICOM image name for pattern
     # result is a list of 1 element
-    filename = pydicom.data.data_manager.get_files(base, pass_dicom)[0]
+    # filename = pydicom.data.data_manager.get_files(base, pass_dicom)[0]
 
-    ds = pydicom.dcmread(filename)
-
-    plt.imshow(ds.pixel_array, cmap=plt.cm.bone)  # set the color map to bone
+    ds = load_data(base)
+    print(type(ds))
+    
+    plt.imshow(ds[0], cmap=plt.cm.bone) # set the color map to bone
     plt.show()
