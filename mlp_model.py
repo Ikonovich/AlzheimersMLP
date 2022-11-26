@@ -1,7 +1,6 @@
-from cmath import exp
-import random
-from turtle import back, backward
 import numpy as np
+from keras.datasets import mnist
+from tqdm import tqdm
 
 ### Initializes the network
 ## Inputs
@@ -13,11 +12,12 @@ import numpy as np
 # network: list of dicts containing each layer's weights and outputs
 def initialize_network(n_inputs, n_hidden_layers, n_hidden_nodes, n_outputs):
     network = list()
-    outputs = []
+    empty = []
     n_previous_layer_nodes = n_inputs
 
     input_layer = {
-        'outputs' : outputs
+        'activations' : empty,
+        'zs' : empty
     }
     network.append(input_layer)
 
@@ -27,7 +27,8 @@ def initialize_network(n_inputs, n_hidden_layers, n_hidden_nodes, n_outputs):
         hidden_layer = {
             'weights': weights,
             'biases' : biases,
-            'outputs': outputs,
+            'activations' : empty,
+            'zs' : empty,
         }
         network.append(hidden_layer)
         n_previous_layer_nodes = n_hidden_nodes
@@ -37,24 +38,25 @@ def initialize_network(n_inputs, n_hidden_layers, n_hidden_nodes, n_outputs):
     output_layer = {
         'weights' : weights,
         'biases' : biases,
-        'outputs' : outputs,
+        'activations' : empty,
+        'zs' : empty,
     }
     network.append(output_layer)
 
     return network
 
-### Calculate activation for a layer
+### Calculate z for a layer
 ## Inputs
 # layer: an array consisting of the weights for all the nodes in the layer
 # inputs: a 1D array consisting of the outputs from the previous layer
 ## Outputs
-# activation: array of node outputs for this layer where the node output is equivalent
+# z: array of node outputs for this layer where the node output is equivalent
 #             to the dot product of the weights and the inputs + the bias
-def activate(layer, inputs):
+def calculate(layer, inputs):
     layer_w = layer['weights']
     layer_b = layer['biases']
-    activation = np.matmul(inputs,layer_w.T) + layer_b
-    return activation
+    z = np.matmul(inputs,layer_w.T) + layer_b
+    return z
 
 ### Calculate sigmoid of x
 def sigmoid(x):
@@ -62,7 +64,44 @@ def sigmoid(x):
 
 ### Calculate derivative of sigmoid of x
 def sigmoid_derivative(x):
-    return x*(1.0-x)
+    sig = sigmoid(x)
+    return sig*(1.0-sig)
+
+### Calculate tanh of x
+def tanh(x):
+    return np.divide((np.exp(2*x)-1.0),(np.exp(2*x)+1.0))
+
+### Calculate derivative of tanh of x
+def tanh_derivative(x):
+    return 1.0-np.square(x)
+
+### Turns int into categorical array
+## Ex: 2 => [0,0,1,0,0,0,0,0,0,0]
+def to_output_array(input: int,n_output: int):
+    output_array = [0] * n_output
+    output_array[input] = 1
+    return output_array
+
+### Turns categorical array to int
+def to_int(cat_array: np.ndarray):
+    output_val = 0
+    output = 0
+    for i, val in enumerate(cat_array):
+        if val > output_val:
+            output_val = val
+            output = i
+
+    return output
+
+### Calculates error of output layer
+def output_layer_error(output, expected, z):
+    return (expected-output) * sigmoid_derivative(z)
+
+### Calculates error of hidden layer
+def hidden_layer_error(z, weights, errors):
+    derivative = sigmoid_derivative(z)
+    weighted_errors = np.matmul(errors,weights)
+    return np.multiply(weighted_errors,derivative)
 
 ### Forward propagate input through network and return output
 ### Save node outputs along the way
@@ -70,95 +109,110 @@ def forward_propagate(network,input):
     inputs = input
     for l, layer in enumerate(network):
         if l != 0:
-            inputs = sigmoid(activate(layer,inputs))
-        layer['outputs'] = inputs
+            z = calculate(layer,inputs)
+            inputs = sigmoid(z)
+            layer['zs'] = z
+        layer['activations'] = inputs
     return inputs
 
 ### Backward propagate output through network and update weights
 def backward_propagate(network,output,expected,learning_rate):
     errors = None # 1D array of previous layer's errors
-    inputs = None
 
     # calculate errors for each layer
     for l, layer in enumerate(reversed(network)):
         l = len(network)-1 - l
         if l !=0:
+            z = layer['zs']
             if l == len(network) - 1:
-                errors = (output - expected) * sigmoid_derivative(output)
+                errors = output_layer_error(output,expected,z)
             else:
-                outputs = layer['outputs']
-                weights = network[l+1]['weights']
-                try:
-                    derivative = sigmoid_derivative(outputs)
-                    weighted_errors = np.matmul(errors,weights)
-                    errors = np.multiply(weighted_errors,derivative)
-                except:
-                    print(f'Errors: \nShape: {errors.shape}\n{errors}')
-                    print(f'Weights: \nShape: {weights.shape}\n{weights}')
-                    print(f'Outputs: \nShape: {outputs.shape}\n{outputs}')
-                    return
+                weights = network[l+1]['weights'] # use the weights connecting this layer to the next
+                errors = hidden_layer_error(z,weights,errors)
+
             layer['errors'] = errors
 
     # update network weights
     for l, layer in enumerate(network):
         if l != 0:
-            inputs = network[l-1]['outputs']
+            inputs = network[l-1]['activations'] # use the inputs to this layer (outputs of last layer)
             errors = layer['errors']
             old_weights = layer['weights']
             old_biases = layer['biases']
 
-            try:
-                delta_w = learning_rate * np.matmul(errors.reshape((-1,1)),inputs.reshape((1,-1)))
-            except:
-                print(f'Errors: \nShape: {errors.reshape((-1,1)).shape}\n{errors.reshape((-1,1))}')
-                print(f'Weights: \nShape: {old_weights.shape}\n{old_weights}')
-                print(f'Inputs: \nShape: {inputs.reshape((1,-1)).shape}\n{inputs.reshape((1,-1))}')
-                return
-            delta_b = learning_rate * errors
+            # multiplies errors and inputs such that the resulting array is the same size as the weights
+            nubla_w = learning_rate * np.matmul(errors.reshape((-1,1)),inputs.reshape((1,-1))) # reshaped to perform matrix multiplication on 1D arrays
+            nubla_b = learning_rate * errors
 
-            new_weights = old_weights + delta_w
-            try:
-                new_biases = old_biases + delta_b
-            except:
-                print(f'Level: {l}')
-                print(f'Errors: \nShape: {errors.shape}\n{errors}')
-                print(f'Biases: \nShape: {old_biases.shape}\n{old_biases}')
-                print(f'Delta B: \nShape: {delta_b.shape}\n{delta_b}')
-                return
+            new_weights = old_weights + nubla_w
+            new_biases = old_biases + nubla_b
+
             layer['weights'] = new_weights
             layer['biases'] = new_biases
 
 ### Trains the network according to the passed training data
-def train(network,X_train,y_train,learning_rate):
-    for s, sample in enumerate(X_train):
-        expected = y_train[s]
+def train(network,X_train: np.ndarray,y_train: np.ndarray,learning_rate):
+    n_outputs = len(network[-1]["biases"])
+    for s in tqdm(range(len(X_train))):
+        sample = X_train[s].flatten()
+        expected = to_output_array(y_train[s],n_outputs)
         output = forward_propagate(network,sample)
+        # print(f'Output: {output}\nExpected: {expected}')
         backward_propagate(network,output,expected,learning_rate)
 
 ### Tests the network against the passed testing data
 ### Returns the accuracy of the network over the testing data
-def test(network,X_test,y_test):
-    errors = []
-    for s, sample in enumerate(X_test):
-        expected = y_test[s]
+def test(network,X_test: np.ndarray,y_test: np.ndarray):
+    error = 0
+    total = 0
+    for s in tqdm(range(len(X_test))):
+        sample = X_test[s].flatten()
         output = forward_propagate(network,sample)
-        errors.append(abs(expected-output))
-    return 1-np.mean(errors) # equivalent to accuracy
+        # expected = to_output_array(y_test[s],n_outputs)
+        #error = output_layer_error(output,expected,network[-1]['zs'])
+        
+        output_num = to_int(output)
+        expected_num = y_test[s]
+        if output_num != expected_num:
+            error += 1
+            print(f'Actual: {output}')
+            print(f'Expected Num: {expected_num}\tActual Num: {output_num}')
+        total += 1
+    return 1-(error/total) # equivalent to accuracy
 
 
 if __name__=='__main__':
-    n_inputs = 2
-    n_hidden_layers = 3
-    n_hidden_nodes = 5
-    n_outputs = 1 # binary classification test
+    learning_rate = 0.001
 
-    net = initialize_network(n_inputs,n_hidden_layers,n_hidden_nodes,n_outputs)
+    # load data
+    print("Loading data...")
+    (train_X, train_y), (test_X, test_y) = mnist.load_data()
 
-    input = np.arange(n_inputs)
-    output = forward_propagate(net,input)
-    # print(net)
-    expected = [1]
-    backward_propagate(net,output,expected,100)
-    for l, layer in enumerate(net):
-        print(f"Layer {l}")
-        print(layer)
+    # normalize values between 0 and 1
+    train_X = np.array([np.divide(sample,255) for sample in train_X])
+    test_X = np.array([np.divide(sample,255) for sample in test_X])
+
+    num_samples, dimension_x, dimension_y = train_X.shape 
+
+    n_inputs = dimension_x*dimension_y
+    n_hidden_layers = 2
+    n_hidden_nodes = 16
+    n_outputs = 10
+
+    # init network
+    print("Creating network...")
+    model = initialize_network(n_inputs,n_hidden_layers,n_hidden_nodes,n_outputs)
+
+    train_portion = 15000
+    # train model
+    print("Training model...")
+    train(model,train_X[:train_portion],train_y[:train_portion],learning_rate)
+
+
+    # for layer in model:
+    #     print(layer)
+    test_portion = 5
+    # test model
+    print("Testing model...")
+    accuracy = test(model,test_X[:test_portion],test_y[:test_portion])
+    print(accuracy)
