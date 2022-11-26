@@ -229,11 +229,6 @@ if __name__ == '__main__':
     folder_path = 'Example\\941_S_5193\\AXIAL_T2_STAR\\2015-04-02_11_01_34.0\\I673865'
     pass_dicom = "ADNI_941_S_5193_MR_AXIAL_T2_STAR__br_raw_20160407105052903_24_S412718_I673865.dcm"
 
-    ## Getting a specific file:
-    # enter DICOM image name for pattern
-    # result is a list of 1 element
-    # filename = pydicom.data.data_manager.get_files(folder_path, "*")
-
     center_numbers = [i for i in range(18,23)] # Specifies the frames to get from the image
     # pixel_arrays = get_center_pixel_arrays(base, center_numbers)
     # for image in pixel_arrays:
