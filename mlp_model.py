@@ -58,38 +58,6 @@ class MLP_Model():
         result = np.matmul(weights,inputs)
         return result
 
-    ### Calculate sigmoid of x
-    def sigmoid(self, x):
-        return 1.0/(1.0+np.exp(-x))
-
-    ### Calculate derivative of sigmoid of x
-    def sigmoid_derivative(self, x):
-        sig = self.sigmoid(x)
-        return sig*(1.0-sig)
-
-    ### Calculate relu
-    def relu(self, x):
-        return np.maximum(x,0)
-
-    ### Calculate derivative of relu
-    def relu_derivative(self, x):
-        output = []
-        output = np.zeros(shape=(x.size,))
-        for i, xi in enumerate(x):
-            if xi > 0:
-                output[i] = 1
-        return output.reshape(output.size,1)
-
-    ### Calculate tanh of x
-    def tanh(self, x):
-        x = np.round(x,5)
-        return np.divide((np.exp(2*x)-1.0),(np.exp(2*x)+1.0))
-
-    ### Calculate derivative of tanh of x
-    def tanh_derivative(self, x):
-        x = np.round(x,5)
-        return 1.0-np.square(x)
-
     ### Turns int into categorical array
     ## Ex: 2 => [0,0,1,0,0,0,0,0,0,0]
     def to_output_array(self, input: int,n_output: int):
@@ -114,9 +82,9 @@ class MLP_Model():
             layer['inputs'] = layer_input
             z = self.calculate(layer,layer_input)
             if l == len(self.network) - 1:
-                layer_input = self.output_activation_method(self, z) # output layer activation function
+                layer_input = self.output_activation_method(z) # output layer activation function
             else:
-                layer_input = self.hidden_activation_method(self, z) # hidden layer activation function
+                layer_input = self.hidden_activation_method(z) # hidden layer activation function
 
             layer['outputs'] = layer_input
 
@@ -135,7 +103,7 @@ class MLP_Model():
                 weights = self.network[l+1]['weights'] # use the weights connecting this layer to the next
                 errors = weights.T @ errors
             
-            derivative = self.hidden_activation_derivative(self, outputs)
+            derivative = self.hidden_activation_derivative(outputs)
             layer['weights'] = old_weights + lr * ((errors*derivative) @ inputs.T)
 
     ### Trains the network according to the passed training data
@@ -169,6 +137,38 @@ class MLP_Model():
             total += 1
         return 1-(error/total) # equivalent to accuracy
 
+### Calculate sigmoid of x
+def sigmoid(x):
+    return 1.0/(1.0+np.exp(-x))
+
+### Calculate derivative of sigmoid of x
+def sigmoid_derivative(x):
+    sig = sigmoid(x)
+    return sig*(1.0-sig)
+
+### Calculate relu
+def relu(x):
+    return np.maximum(x,0)
+
+### Calculate derivative of relu
+def relu_derivative(x):
+    output = []
+    output = np.zeros(shape=(x.size,))
+    for i, xi in enumerate(x):
+        if xi > 0:
+            output[i] = 1
+    return output.reshape(output.size,1)
+
+### Calculate tanh of x
+def tanh(x):
+    x = np.round(x,5)
+    return np.divide((np.exp(2*x)-1.0),(np.exp(2*x)+1.0))
+
+### Calculate derivative of tanh of x
+def tanh_derivative(x):
+    x = np.round(x,5)
+    return 1.0-np.square(x)
+
 def run_mnist():
     learning_rate = 0.005
 
@@ -187,10 +187,10 @@ def run_mnist():
     n_hidden_nodes = 16
     n_outputs = 10
     method_configs = {
-        "hidden_activation_method" : MLP_Model.relu,
-        "hidden_activation_derivative" : MLP_Model.relu_derivative,
-        "output_activation_method" : MLP_Model.sigmoid,
-        "output_activation_derivative" : MLP_Model.sigmoid_derivative,
+        "hidden_activation_method" : relu,
+        "hidden_activation_derivative" : relu_derivative,
+        "output_activation_method" : sigmoid,
+        "output_activation_derivative" : sigmoid_derivative,
     }
 
     # init network
