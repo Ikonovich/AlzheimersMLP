@@ -1,5 +1,3 @@
-import csv
-import statistics
 import matplotlib.pyplot as plt
 from data import load_data
 from mlp_model import *
