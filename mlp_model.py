@@ -1,6 +1,7 @@
 import numpy as np
 from keras.datasets import mnist
 from tqdm import tqdm
+from sklearn.metrics import precision_recall_fscore_support
 
 hidden_activation_method = None
 hidden_activation_derivative = None
@@ -18,6 +19,14 @@ class MLP_Model():
     ## Outputs
     # network: list of dicts containing each layer's weights and outputs
     def __init__(self, n_inputs, n_hidden_layers, n_hidden_nodes, n_outputs, configs):
+
+        # Storing these to print after running
+        self.learning_rate = None
+        self.n_inputs = n_inputs
+        self.n_hidden_layers = n_hidden_layers
+        self.n_hidden_nodes = n_hidden_nodes
+        self.configs = configs
+
         self.hidden_activation_method = configs["hidden_activation_method"]
         self.hidden_activation_derivative = configs["hidden_activation_derivative"]
         self.output_activation_method = configs["output_activation_method"]
@@ -109,6 +118,8 @@ class MLP_Model():
     ### Trains the network according to the passed training data
     def train(self,X_train: np.ndarray,y_train: np.ndarray,learning_rate):
         n_outputs = len(self.network[-1]["biases"])
+        self.learning_rate = learning_rate
+
         for s in tqdm(range(len(X_train))):
             sample = X_train[s]
             sample = sample.reshape(sample.size,1)
@@ -124,6 +135,7 @@ class MLP_Model():
     def test(self,X_test: np.ndarray,y_test: np.ndarray):
         error = 0
         total = 0
+        y_pred = [] # Stores the results
         for s in tqdm(range(len(X_test))):
             sample = X_test[s]
             sample = sample.reshape(sample.size,1)
@@ -132,10 +144,31 @@ class MLP_Model():
             
             output_num = self.to_int(output.flatten())
             expected_num = self.to_int(y_test[s])
+            y_pred.append(output_num)
             if output_num != expected_num:
                 error += 1
             total += 1
-        return 1-(error/total) # equivalent to accuracy
+        self.print_results(y_test, y_pred, total, error)
+
+    def print_results(self, y_actual, y_predicted, total, error):
+
+        accuracy = 1 - (error/total)
+        precision, recall, fscore, support = precision_recall_fscore_support(
+            y_actual,
+            y_predicted,
+            labels=["Non Demented", "Very Mild Demented", "Mild Demented", "Moderate Demented"])
+        print(f"--- Parameters --- "
+              f"\nLearning rate: {self.learning_rate}"
+              f"Activation: \n{self.hidden_activation_method}"
+              f"\nNumber of Hidden Layers: {self.n_hidden_layers}"
+              f"\nNumber of Neurons per Hidden Layer: {self.n_hidden_nodes}"
+              f"\nLearning rate: {self.learning_rate}"
+              f"\n\n--- Results --- "
+              f"\nAccuracy: {accuracy}"
+              f"\nPrecision: {precision}"
+              f"\nRecall: {recall}"
+              f"\nSupport: {support}")
+
 
 ### Calculate sigmoid of x
 def sigmoid(x):
@@ -158,6 +191,24 @@ def relu_derivative(x):
         if xi > 0:
             output[i] = 1
     return output.reshape(output.size,1)
+
+# calculate leaky relu
+def leaky_relu(x):
+    if x > 0:
+        return x
+    else:
+        return 0.01 * x
+
+### Calculate derivative of leaky relu
+def leaky_relu_derivative(x):
+    output = []
+    output = np.zeros(shape=(x.size,))
+    for i, xi in enumerate(x):
+        if xi > 0:
+            output[i] = 1
+        else:
+            output[i] = 0.01
+    return output.reshape(output.size , 1)
 
 ### Calculate tanh of x
 def tanh(x):
@@ -187,8 +238,8 @@ def run_mnist():
     n_hidden_nodes = 16
     n_outputs = 10
     method_configs = {
-        "hidden_activation_method" : relu,
-        "hidden_activation_derivative" : relu_derivative,
+        "hidden_activation_method" : leaky_relu,
+        "hidden_activation_derivative" : leaky_relu_derivative,
         "output_activation_method" : sigmoid,
         "output_activation_derivative" : sigmoid_derivative,
     }
