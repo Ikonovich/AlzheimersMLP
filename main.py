@@ -1,9 +1,8 @@
 import csv
 import statistics
 import matplotlib.pyplot as plt
-import pydicom
-import pydicom.data
-import os
+from data import load_data
+from mlp_model import *
 
 def process_csv(filename_in):
     with open(filename_in, newline='') as file:
@@ -78,11 +77,6 @@ def find_mean_sessions(sessions, n):
         sess_age[session[5]] = session[2]
 
     return []
-
-
-
-
-
 
 def analyze_data(rows):
 
@@ -180,59 +174,37 @@ def strip_duplicate_imaging(rows):
 
     return subjects, duplicate_count
 
-
-## Inputs
-# folder_path: relative path to the folder of DICOM images
-# center_numbers: array of MRI slice indices
-## Outputs
-# None: saves the resulting images to the Images directory
-def convert_to_jpg(folder_path, center_numbers):
-    # use the folder containing the images you want to load
-    # pattern "*" means all the images in the folder
-    file_names = pydicom.data.data_manager.get_files(folder_path, "*")
-    # convert center_numbers to the format you will find them in the file names
-    for n, number in enumerate(center_numbers):
-        center_numbers[n] = "_{}_".format(number)
-
-    # get file names that are only the frames specified in center_numbers
-    center_file_names = []
-    for file_name in file_names:
-        if any(number in file_name for number in center_numbers):
-            center_file_names.append(file_name)
-
-
-    ## WIP functionality to create folders within \Images to organize created images
-    # parent_dir = os.path.join(os.getcwd(),"Images")
-    # new_dir = folder_path.replace('Example\\','')
-    # path = os.path.join(parent_dir,new_dir)
-    # print(path)
-    # os.mkdir(path) # Make new folder in Images
-
-    # save the files
-    for file_name in center_file_names:
-        pixel_array = dcmread(file_name).pixel_array
-        new_file_name = file_name.replace('.dcm','.jpg').replace(folder_path,'').replace('\\','')
-        save_path = os.path.join("Images",new_file_name)
-        plt.imsave(save_path, pixel_array, cmap=plt.cm.bone) # set the color map to bone
-
 if __name__ == '__main__':
-    #filename = 'Data/AxialWithCDR18981.csv'
-    #process_csv(filename)
+    # Load data
+    print("Loading data...")
+    trainX, trainY, testX, testY = load_data()
 
-    import numpy as np
-    import matplotlib.pyplot as plt
-    from pydicom import dcmread
-    from pydicom.data.data_manager import get_files
-    import os
+    # Train model
+    num_samples, dimension = trainX.shape
 
-    # Full path of the DICOM file is passed in base
-    folder_path = 'Example\\941_S_5193\\AXIAL_T2_STAR\\2015-04-02_11_01_34.0\\I673865'
-    pass_dicom = "ADNI_941_S_5193_MR_AXIAL_T2_STAR__br_raw_20160407105052903_24_S412718_I673865.dcm"
+    n_inputs = dimension
+    n_hidden_layers = 1
+    n_hidden_nodes = 128
+    n_outputs = 4
+    method_configs = {
+        "hidden_activation_method" : relu,
+        "hidden_activation_derivative" : relu_derivative,
+        "output_activation_method" : sigmoid,
+        "output_activation_derivative" : sigmoid_derivative,
+    }
 
-    center_numbers = [i for i in range(18,23)] # Specifies the frames to get from the image
-    # pixel_arrays = get_center_pixel_arrays(base, center_numbers)
-    # for image in pixel_arrays:
-    #     plt.imshow(image, cmap=plt.cm.bone)  # set the color map to bone
-    #     plt.show()
-    #     plt.imsave("exampledicom.jpg", image, cmap=plt.cm.bone)
-    convert_to_jpg(folder_path,center_numbers)
+    # init network
+    print("Creating network...")
+    model = MLP_Model(n_inputs,n_hidden_layers,n_hidden_nodes,n_outputs,method_configs)
+
+    # train model
+    learning_rate = 0.001
+    num_epochs = 1
+    print("Training model...")
+    for epoch in range(num_epochs):
+        model.train(trainX,trainY,learning_rate)
+
+    # test model
+    print("Testing model...")
+    accuracy = model.test(testX,testY)
+    print(accuracy)

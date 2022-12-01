@@ -110,10 +110,10 @@ class MLP_Model():
     def train(self,X_train: np.ndarray,y_train: np.ndarray,learning_rate):
         n_outputs = len(self.network[-1]["biases"])
         for s in tqdm(range(len(X_train))):
-            sample = X_train[s].flatten()
+            sample = X_train[s]
             sample = sample.reshape(sample.size,1)
 
-            expected = self.to_output_array(y_train[s],n_outputs)
+            expected = y_train[s]
             expected = expected.reshape(expected.size,1)
 
             output = self.forward_propagate(sample)
@@ -125,13 +125,13 @@ class MLP_Model():
         error = 0
         total = 0
         for s in tqdm(range(len(X_test))):
-            sample = X_test[s].flatten()
+            sample = X_test[s]
             sample = sample.reshape(sample.size,1)
             
             output = self.forward_propagate(sample)
             
             output_num = self.to_int(output.flatten())
-            expected_num = y_test[s]
+            expected_num = self.to_int(y_test[s])
             if output_num != expected_num:
                 error += 1
             total += 1
