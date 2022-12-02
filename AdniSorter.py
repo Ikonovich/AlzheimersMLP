@@ -4,6 +4,9 @@ import os
 import random
 import re
 import shutil
+import pydicom
+import string
+from matplotlib import pyplot as plt
 
 
 class AdniSorter:
@@ -43,27 +46,32 @@ class AdniSorter:
         # Maps session IDs to their folder paths
         self.sessionToPath = self.getSessionPaths()
 
+        # Next, split each dicom image into a folder of images
+        self.splitSessionDicoms()
         # map session IDs to their images
-        for session in self.sessionToPath:
-            path = self.sessionToPath[session]
-            self.sessionToImages[session] = self.getImagePaths(path)
+        # for session in self.sessionToPath:
+        #     path = self.sessionToPath[session]
+        #     self.sessionToImages[session] = self.getImagePaths(path)
+
+
 
         # Finally, map cdrs to lists of images
         self.getFinalSets()
 
+
+        print("Processing complete.")
         nonLen = len(self.cdrToImage["NonDemented"])
         veryMildLen = len(self.cdrToImage["VeryMildDemented"])
         mildLen = len(self.cdrToImage["MildDemented"])
         modLen = len(self.cdrToImage["ModerateDemented"])
-
+        
         final_count = nonLen + veryMildLen + mildLen + modLen
-
-
+        
         print(f"Sort Results:\n Total Images: {final_count} \nNon Demented: {nonLen} "
               f"\nVery Mild Demented: {veryMildLen} \nMild Demented: {mildLen}"
               f"\nModerate Demented: {modLen}")
 
-        return self.cdrToImage
+        # return self.cdrToImage
 
 
 
@@ -109,66 +117,114 @@ class AdniSorter:
     def getSessionPaths(self):
         sessionToPath = {}
         # Regex for session IDs
-        sesReg = re.compile(r"I\d{5, 6}")
+        sesReg = re.compile(r"I\d{4,7}$")
+
         for folder, subfolders, files in os.walk(os.path.join("ADNI", "unsorted")):
 
-            if sesReg.match(folder):
-                sessionToPath[folder] = os.path.join(self.unsortedPath, folder)
+            # Only searches the last ten digits of the current path
+            match = sesReg.search(folder[(len(folder) - 10):])
+            if match is not None and match.group is not None:
+
+                # Checks to see if this session has been assigned a CDR
+                if match.group(0)[1:] in self.sessionToCDR:
+                    sessionToPath[match.group(0)[1:]] = folder
 
         print(f"Found {len(sessionToPath)} session folders.")
         return sessionToPath
 
-    ## Gets the images we want for a specific session path
-    def getImagePaths(self, sessionPath):
+    # Splits each dicom in each session into its respective images
+    def splitSessionDicoms(self):
+        median_n = 5
+        dcmList = []
+        i = 0
+        for session in self.sessionToPath:
+            path = self.sessionToPath[session] # session folders
+            slices = pydicom.data.data_manager.get_files(path, '*')
+            if len(slices)==1:
+                filename = slices[0]
+                medianSlices = self.handleSingleSlice(median_n, filename)
 
-        # Stores the image paths we want to return
-        selectedImages = []
+                for num, pixel_array in enumerate(medianSlices):
+                    new_file_name = filename.replace('.dcm','.jpg').replace('_1_',str(num))
+                    plt.imsave(new_file_name, pixel_array, cmap=plt.cm.bone)
+                    if session not in self.sessionToImages:
+                        self.sessionToImages[session] = [new_file_name]
+                    else:
+                        self.sessionToImages[session].append(new_file_name)
+            else:
+                medianSlices = self.getNMedianSlices(median_n,slices)
 
-        # Regex matcher for image number
-        numMatch = re.compile(r"_\d{2, 3}_")
+                for slice in medianSlices:
+                    pixel_array = pydicom.dcmread(slice).pixel_array
+                    new_file_name = slice.replace('.dcm','.jpg')
+                    plt.imsave(new_file_name, pixel_array, cmap=plt.cm.bone)
+                    if session not in self.sessionToImages:
+                        self.sessionToImages[session] = [new_file_name]
+                    else:
+                        self.sessionToImages[session].append(new_file_name)
 
-        # Stores all image names in the session folder
-        imagePaths = os.listdir(sessionPath)
+    
+    # Takes the filenames of all the slices in a single session folder and 
+    # returns the ones that are the median N
+    def getNMedianSlices(self, N, slices):
+        medianSlices = [] # stores median n slices (filenames)
+        medianSliceNumbers = [] # stores median n numbers
+        if(len(slices)==1): raise Exception("Error")
+        regSlice = re.compile('_\d{1,3}_')
+        sliceNumbers = []
+        for slice in slices:
+            matches = regSlice.findall(slice)
+            if matches is not None and len(matches)>0:
+                numString = matches[-1]
+                num = int(numString[1:-1])
+                sliceNumbers.append(num)
 
-        # Get what should be the median picture index
-        median = int(len(imagePaths) / 2)
+        firstSliceNumber = min(sliceNumbers)
+        lastSliceNumber = max(sliceNumbers)
+        medianSliceNumber = ((lastSliceNumber-firstSliceNumber)//2) + firstSliceNumber
+        if medianSliceNumber%2 != 0: medianSliceNumber += 1 
+        halfN = N//2
+        
+        medianSliceNumbers.append(medianSliceNumber)
+        for n in range(halfN):
+            medianSliceNumbers.append(medianSliceNumber+2*(n+1))
+            medianSliceNumbers.append(medianSliceNumber-2*(n+1))
 
-        # Maps image numbers to their paths
-        numToPath = {}
-        for file in imagePaths:
+        ## Convert the numbers to the format you'd find them in the filenames
+        numberStrings = []
+        for number in medianSliceNumbers:
+            numberStrings.append("_{}_".format(number))
 
-            # Split the string to avoid false positives,
-            # The file number is always late in the string
-            splitPoint = int(len(file) / 2)
-            name = file[splitPoint:]
+        ## If the filename contains the number, add it to medianSlices
+        for slice in slices:
+            if any(number in slice[-30:] for number in numberStrings):
+                medianSlices.append(slice)
 
-            results = numMatch.search(name).group(0)
-            results.replace("_", "")
-            num = int(results)
-            # Adds the image's number and its path to the dictionary
-            numToPath[num] = os.path.join(sessionPath, file)
+        return medianSlices
 
-        return self.filterDesired(numToPath, median)
+    # If the session only consists of a single dicom, pass in the filename and
+    # return the median n pixel arrays
+    def handleSingleSlice(self,N,filename):
+        file = pydicom.dcmread(filename)
+        pixel_array_3d = file.pixel_array
+        num_slices, dimX, dimY = pixel_array_3d.shape
 
-    # Takes a dictionary of (image number, image path) and returns the
-    # 5 closest to the middle
-    def filterDesired(self, numToPathDict, median):
+        medianSliceArrays = []
+        halfN = N//2
 
-        desiredImages = []
-        for i in range(5):
-            closestNum = 0
+        medianSliceIndex = num_slices//2
+        if medianSliceIndex%2 != 0: medianSliceIndex+=1
+        medianSliceArrays.append(pixel_array_3d[medianSliceIndex])
+        for n in range(halfN):
+            medianSliceArrays.append(pixel_array_3d[medianSliceIndex+(n+1)])
+            medianSliceArrays.append(pixel_array_3d[medianSliceIndex-(n+1)])
 
-            for num in numToPathDict:
-                if math.abs(median - num) < math.abs(median - closestNum):
-                    closestNum = num
-            desiredImages.append(numToPathDict[closestNum])
-            del numToPathDict[closestNum]
-
-        return desiredImages
+        return medianSliceArrays
 
     # Uses the final sessionToCDR and sessionToImage maps,
     # and compiles images into four lists by alzheimers rating
     def getFinalSets(self):
+
         self.cdrToImage["NonDemented"] = list()
         self.cdrToImage["VeryMildDemented"] = list()
         self.cdrToImage["MildDemented"] = list()
@@ -196,7 +252,7 @@ class AdniSorter:
     # Moves that percentage of images to self.validationPath
     # Moves the remainder to self.trainingPath
     # Validate fraction: Should be a number between 0 and 1. Ideally 0.1 or 0.2
-    def sortValidate(self, cdrToImageMap, validate_fraction):
+    def sortValidate(self, validate_fraction):
 
         # Get image paths of each type
         nonDem = self.cdrToImage["NonDemented"]
@@ -260,4 +316,4 @@ if __name__ == "__main__":
     print(len(sorter.cdrToImage["ModerateDemented"]))
 
     # Test sorting into validation and train
-    sorter.sortValidate(sorter.cdrToImage, 0.1)
+    sorter.sortValidate(0.1)
