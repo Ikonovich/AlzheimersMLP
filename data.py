@@ -4,6 +4,7 @@ import json
 import os
 from PIL import Image
 import matplotlib.pyplot as plt
+from sklearn.neural_network import MLPClassifier
 
 def handle_folder(folder_name,k):
     list_dir = os.listdir(folder_name)
@@ -104,4 +105,7 @@ def load_data():
 if __name__ == "__main__":
     trainX, trainY, testX, testY = load_data()
 
-    print(trainX.shape)
+    model = MLPClassifier(solver="lbfgs", alpha = 1e-7,hidden_layer_sizes=(16,1),random_state=1)
+
+    model.fit(trainX,trainY)
+    print(model.score(testX,testY))
