@@ -1,3 +1,5 @@
+import csv
+import statistics
 import matplotlib.pyplot as plt
 from data import load_data
 from mlp_model import *
@@ -177,16 +179,20 @@ if __name__ == '__main__':
     print("Loading data...")
     trainX, trainY, testX, testY = load_data()
 
+    # normalize values between 0 and 1
+    trainX = np.array([np.divide(sample,255) for sample in trainX])
+    testX = np.array([np.divide(sample,255) for sample in testX])
+
     # Train model
     num_samples, dimension = trainX.shape
 
     n_inputs = dimension
     n_hidden_layers = 1
-    n_hidden_nodes = 128
+    n_hidden_nodes = 190
     n_outputs = 4
     method_configs = {
-        "hidden_activation_method" : relu,
-        "hidden_activation_derivative" : relu_derivative,
+        "hidden_activation_method" : leaky_relu,
+        "hidden_activation_derivative" : leaky_relu_derivative,
         "output_activation_method" : sigmoid,
         "output_activation_derivative" : sigmoid_derivative,
     }
@@ -196,7 +202,7 @@ if __name__ == '__main__':
     model = MLP_Model(n_inputs,n_hidden_layers,n_hidden_nodes,n_outputs,method_configs)
 
     # train model
-    learning_rate = 0.001
+    learning_rate = 1e-5
     num_epochs = 1
     print("Training model...")
     for epoch in range(num_epochs):
@@ -204,5 +210,7 @@ if __name__ == '__main__':
 
     # test model
     print("Testing model...")
-    accuracy = model.test(testX,testY)
-    print(accuracy)
+    model.test(testX,testY)
+    print(f"Number of Epochs: {num_epochs}")
+
+    print(model.network[1])
