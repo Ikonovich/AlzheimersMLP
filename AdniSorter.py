@@ -139,14 +139,14 @@ class AdniSorter:
         i = 0
         for session in self.sessionToPath:
             path = self.sessionToPath[session] # session folders
-            slices = pydicom.data.data_manager.get_files(path, '*')
+            slices = pydicom.data.data_manager.get_files(path, '*.dcm')
             if len(slices)==1:
                 filename = slices[0]
                 medianSlices = self.handleSingleSlice(median_n, filename)
 
                 for num, pixel_array in enumerate(medianSlices):
                     new_file_name = filename.replace('.dcm','.jpg').replace('_1_',str(num))
-                    plt.imsave(new_file_name, pixel_array, cmap=plt.cm.bone)
+                    #plt.imsave(new_file_name, pixel_array, cmap=plt.cm.bone)
                     if session not in self.sessionToImages:
                         self.sessionToImages[session] = [new_file_name]
                     else:
@@ -157,7 +157,7 @@ class AdniSorter:
                 for slice in medianSlices:
                     pixel_array = pydicom.dcmread(slice).pixel_array
                     new_file_name = slice.replace('.dcm','.jpg')
-                    plt.imsave(new_file_name, pixel_array, cmap=plt.cm.bone)
+                    #plt.imsave(new_file_name, pixel_array, cmap=plt.cm.bone)
                     if session not in self.sessionToImages:
                         self.sessionToImages[session] = [new_file_name]
                     else:
@@ -232,21 +232,22 @@ class AdniSorter:
 
         for session in self.sessionToCDR:
             cdr = self.sessionToCDR[session]
-            imagePaths = self.sessionToImages[session]
+            if session in self.sessionToImages:
+                imagePaths = self.sessionToImages[session]
 
-            match cdr:
-                case 0.0:
-                    self.cdrToImage["NonDemented"].extend(imagePaths)
-                case 0.5:
-                    self.cdrToImage["VeryMildDemented"].extend(imagePaths)
-                case 1.0:
-                    self.cdrToImage["MildDemented"].extend(imagePaths)
-                case 2.0:
-                    self.cdrToImage["ModerateDemented"].extend(imagePaths)
-                case 3.0:  # Ignore these, there are too few available.
-                    pass
-                case _:  # Something has gone wrong if we get here
-                    raise Exception(f"getFinalSets: CDR {cdr} is invalid.")
+                match cdr:
+                    case '0.0':
+                        self.cdrToImage["NonDemented"].extend(imagePaths)
+                    case '0.5':
+                        self.cdrToImage["VeryMildDemented"].extend(imagePaths)
+                    case '1.0':
+                        self.cdrToImage["MildDemented"].extend(imagePaths)
+                    case '2.0':
+                        self.cdrToImage["ModerateDemented"].extend(imagePaths)
+                    case '3.0':  # Ignore these, there are too few available.
+                        pass
+                    case _:  # Something has gone wrong if we get here
+                        raise Exception(f"getFinalSets: CDR {cdr} is invalid.")
 
     # Takes a dictionary of (alzheimers rating, image paths) and a validation fraction.
     # Moves that percentage of images to self.validationPath
@@ -265,8 +266,9 @@ class AdniSorter:
         ##### Non dem sample
         length = len(nonDem)
         random.shuffle(nonDem)
-        validationSet = nonDem[:((length + 1) * validate_fraction)]  # Splits validation fraction
-        trainingSet = nonDem[((length + 1) * validate_fraction):]  # Split remainder to test set
+        split = int((length + 1) * validate_fraction)
+        validationSet = nonDem[:split]  # Splits validation fraction
+        trainingSet = nonDem[split:]  # Split remainder to test set
 
         for item in validationSet:
             shutil.move(item, os.path.join(self.validationPath, "NonDemented"))
@@ -276,8 +278,9 @@ class AdniSorter:
         #### Very mild dem sample
         length = len(veryMildDem)
         random.shuffle(veryMildDem)
-        validationSet = veryMildDem[:((length + 1) * validate_fraction)]  # Splits validation fraction
-        trainingSet = veryMildDem[((length + 1) * validate_fraction):]  # Split remainder to test set
+        split = int((length + 1) * validate_fraction)
+        validationSet = veryMildDem[:split]  # Splits validation fraction
+        trainingSet = veryMildDem[split:]  # Split remainder to test set
 
         for item in validationSet:
             shutil.move(item, os.path.join(self.validationPath, "VeryMildDemented"))
@@ -287,8 +290,9 @@ class AdniSorter:
         # Mild Dem sample
         length = len(mildDem)
         random.shuffle(mildDem)
-        validationSet = mildDem[:((length + 1) * validate_fraction)]  # Splits validation fraction
-        trainingSet = mildDem[((length + 1) * validate_fraction):]  # Split remainder to test set
+        split = int((length + 1) * validate_fraction)
+        validationSet = mildDem[:split]  # Splits validation fraction
+        trainingSet = mildDem[split:]  # Split remainder to test set
 
         for item in validationSet:
             shutil.move(item, os.path.join(self.validationPath, "MildDemented"))
@@ -298,8 +302,9 @@ class AdniSorter:
         # Mod dem sample
         length = len(modDem)
         random.shuffle(modDem)
-        validationSet = modDem[:((length + 1) * validate_fraction)]  # Splits validation fraction
-        trainingSet = modDem[((length + 1) * validate_fraction):]  # Split remainder to test set
+        split = int((length + 1) * validate_fraction)
+        validationSet = modDem[:split]  # Splits validation fraction
+        trainingSet = modDem[split:]  # Split remainder to test set
 
         for item in validationSet:
             shutil.move(item, os.path.join(self.validationPath, "ModerateDemented"))
