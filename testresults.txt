@@ -1,0 +1,73 @@
+
+Run finished at 2022-12-03 15:56:02.493973
+--- Parameters --- 
+Learning rate: <function constant_learning_rate at 0x0000027E1F2D3880>
+Number of Hidden Layers: 3 
+
+Layers:
+Layer 0: Input Layer
+Parameters: 
+
+Layer Input Size: 36100
+Layer Output Size: 16
+Layer Activation: relu
+
+Dropout Rate: None
+Layer 1: Hidden Layer
+Parameters: 
+
+Layer Input Size: 16
+Layer Output Size: 16
+Layer Activation: relu
+
+Dropout Rate: None
+Layer 2: Output Layer
+Parameters: 
+
+Layer Input Size: 16
+Layer Output Size: 4
+Layer Activation: sigmoid
+
+Dropout Rate: None
+
+
+--- Results --- 
+---Network Results---
+Overall Accuracy: 0.25
+Precision: 0.3068386322735453
+Recall: 0.3068386322735453
+Micro-Averaged F1 Score: 0.3068386322735453
+Macro-Averaged F1 Score: 0.2118726005971847
+Specificity:: 0.7689462107578484
+
+----Class Results---- 
+Label: : NonDemented
+Accuracy: 0.6874331550802139
+Precision: 0.39294117647058824
+Recall: 0.5591517857142857
+F1 Score: 0.46153846153846156
+Specificity: 0.7278481012658228
+
+--------------------- 
+Label: : VeryMildDemented
+Accuracy: 0.5330901511203752
+Precision: 0
+Recall: 0
+F1 Score: 0
+Specificity: 1.0
+
+--------------------- 
+Label: : MildDemented
+Accuracy: 0.5330901511203752
+Precision: 0
+Recall: 0
+F1 Score: 0
+Specificity: 1.0
+
+--------------------- 
+Label: : ModerateDemented
+Accuracy: 0.7115317818687044
+Precision: 0.2535211267605634
+Recall: 0.8080495356037152
+F1 Score: 0.3859519408502773
+Specificity: 0.6993348982785602
