@@ -1,312 +1,402 @@
+import datetime
 import math as math
 import sys
 import time
-
-import Activations
+import Functions
 
 import tensorflow
 from keras.datasets import mnist
 
 import numpy as np
+
+import Metrics
+import ModelParams
 from data import load_data
 from sklearn.metrics import f1_score, precision_score, recall_score, precision_recall_fscore_support
 
 
 # Represents a layer of a neural network
 class Layer:
-    def __init__(self, activation, size):
+    def __init__(self, network, activation, input_size, output_size):
 
-        self.activation = Activations.ACTIVATION_FUNCTION_MAP[activation][0]
-        self.derivative = Activations.ACTIVATION_FUNCTION_MAP[activation][1]
-        self.size = size
 
-class NeuralNetwork():
-    # hidden_activation: String. Relu, sigmoid, tanh, leaky_relu
-    # output_activation: String. Relu, sigmoid, tanh, leaky_relu
-    # input_size: Int. Size of a single data input from the set
-    # output_size: Int. Size of possible outputs of the set.
-    # hidden_layer_size: Int. Size of each hidden layer
-    # learning_rate: String. static_learning_rate, neg_linear_learn_rate
-    # lrn_rate_modifier: Int. Determines strength/rate of growth of learning rate function
+        # defines the drop-out rate
+        self.dropout = None
 
-    def __init__(
-            self,
-            hidden_activation,
-            output_activation,
-            input_size,
-            output_size,
-            hidden_layer_size,
-            learning_rate,
-            lrn_rate_modifier):
+        # Stores the network that this layer is a part of
+        self.network = network
 
-        # Maps activation strings to their functions and derivatives
-        self.learnRateToFunctions = {
-            "leaky_relu": (self.leaky_relu, self.leaky_relu_prime),
-            "relu": {self.relu, self.relu_prime},
-            "sigmoid": {self.sigmoid, self.sigmoid_two},
-            "tanh": {self.tanh, self.tanh_prime},
-            "softmax": {self.softmax, self.softmax_prime}
-        }
+        # Stores the previous layer in the network, if any
+        self.previous_layer = None
+        # Stores the following layer in the network, if any
+        self.next_layer = None
 
-        print("Perceptron input size: " + str(input_size))
+        # Used to show results
+        self.activation_string = activation
 
-        self.learningRate = learning_rate
-        self.lrnRateModifier = lrn_rate_modifier
+        self.activation = Functions.ACTIVATION_FUNCTION_MAP[activation][0]
+        self.derivative = Functions.ACTIVATION_FUNCTION_MAP[activation][1]
+        self.input_size = input_size
+        self.output_size = output_size
+        self.weights = np.random.randn(input_size, output_size)
 
+        # Stores the last provided input
+        self.last_input = None
+        # Stores the last calculated output
+        self.last_output = None
+        # Stores the last calculated delta
+        self.last_delta = None
+
+        self.bias = [0] * output_size
+
+    # Handles forward propagation when given input data
+    # The size of data_in must match the input size of this layer
+    def forward_prop(self, data_in=None):
+
+        # If data_in isn't None, this should be an input layer.
+        input_in = data_in
+        if data_in is None:
+            input_in = self.previous_layer.last_output
+
+        if len(input_in) != self.input_size:
+            raise Exception("Invalid input size to layer.forward_prop.")
+
+        self.last_input = input_in
+        self.last_output = (np.dot(input_in, self.weights) / self.input_size) #+ self.bias
+        return self.last_output
+
+    def get_output(self):
+        return self.last_output
+
+    # Performs backprop for the output layer. Takes in a list of expected results.
+    def output_back_prop(self, expected):
+        higher_layer = self.previous_layer
+
+        result = [0] * self.output_size
+        result[np.argmax(self.last_output)] = 1
+        result = np.asarray(result)
+        y = np.asarray(expected)
+
+        # The results are the last output of this layer
+        error = -(expected - self.last_output)
+        prime = self.derivative(self.last_output) #.flatten()
+
+        self.last_delta = error * prime
+        self.back_prop(prime)
+
+    def hidden_back_prop(self):
+        lower_layer = self.next_layer
+        prime = self.derivative(self.last_output).flatten()
+        self.last_delta = np.dot(lower_layer.last_delta, lower_layer.weights.T) * prime
+        self.back_prop(prime)
+
+    def back_prop(self, prime):
+        adjustedInput = self.last_input[np.newaxis]
+        adjustedDelta = self.last_delta[np.newaxis]
+        weight_updates = np.dot(adjustedInput.T, adjustedDelta * self.network.learning_function(self.network))
+        # bias_updates = prime * self.network.learning_function(self.network) * 0.1
+        self.weights -= weight_updates
+        # self.bias -= bias_updates
+
+    def get_layer_string(self):
+        return f"\nLayer Input Size: {self.input_size}" \
+            + f"\nLayer Output Size: {self.output_size}" \
+            + f"\nLayer Activation: {self.activation_string}\n" \
+            + f"\nDropout Rate: None\n"
+
+# Represents a neural network composed of layers
+# learning_rate: String. constant, linear_decreasing
+# lrn_rate_modifier: Int. Determines strength/rate of growth of learning rate function
+class NeuralNetwork:
+
+    def __init__(self, learning_rate, lrn_rate_modifier, labels=None):
+
+
+        # Stores whether we are currently training
+        self.is_training = False
+
+        self.labels = labels
+        self.learning_function = Functions.LEARNING_FUNCTION_MAP[learning_rate]
+        self.lrn_rate_modifier = lrn_rate_modifier
+        self.layers = []
+
+        # Stores the size of the dataset and the percent complete during a run() call.
+        # Used primarily for updating dynamic learning rates
+        self.sample_count = None
+        self.percent_complete = None
+
+
+        # Stores the last set of results produced by the run() function,
+        # as called by train or test.
         self.correct = 0
         self.wrong = 0
-
         self.results = []
         self.expected = []
 
-        self.data = None
+    # Takes a list of inputs and trains the network with them
+    def train(self, x_set, y_set):
+        return self.run(x_set, y_set, training=True)
 
-        # Set layer sizes
-        self.hidden_layer_size = hidden_layer_size
-        self.input_size = input_size
-        self.output_size = output_size
+    # Takes a list of inputs and tests the network with them,
+    # without performing backprop
+    def test(self, x_set, y_set):
+        return self.run(x_set, y_set, training=False)
 
-        # Set activation functions
-        self.hidden_activation = self.learnRateToFunctions[hidden_activation][0]
-        self.hidden_derivative = self.learnRateToFunctions[hidden_activation][1]
+    # Runs through a full data set, either with training or not.
+    def run(self, x_set, y_set, training):
+        self.is_training = training
 
-        self.output_activation = self.learnRateToFunctions[output_activation][0]
-        self.output_derivative = self.learnRateToFunctions[output_activation][1]
+        # Clear results of previous run
+        self.clear_results()
+        # Save the size of the input data set
+        self.sample_count = len(x_set)
 
-        # Set layer sizes
-        self.hidden_layer_size = hidden_layer_size
-        self.input_size = input_size
-        self.output_size = output_size
+        start = time.time()
+        i = 0
+        for (sample, value) in zip(x_set, y_set):
+            output = self.forward_prop(sample, value)
+            if training == True:
+                self.back_prop(value)
+            i += 1
+
+            # Update the percent completed and the running accuracy.
+            if i % 1000 == 0:
+                self.percent_complete = (i / self.sample_count)
+                sys.stdout.write("Progress: %d%%  \r" % self.percent_complete)
+
+                print(f"Percent complete: {self.percent_complete}\n")
+
+        print(f"Time elapsed: {time.time() - start}")
+        accuracy = 1 - (self.wrong / (self.wrong + self.correct))
+        print(f"Accuracy: {accuracy}")
+
+        return self.save_results()
+
+    # Computes one iteration of forward prop for the network
+    def forward_prop(self, x_sample, y_value=None):
+
+        for i in range(len(self.layers)):
+            layer = self.layers[i]
+            if i == 0:
+                # Run the first layer using the input data
+                layer.forward_prop(x_sample)
+            else:
+                # Run every layer after the input layer using the output of the previous layer
+                layer.forward_prop()
+
+        result = self.layers[len(self.layers) - 1].last_output
+        # If y value isn't none, gets the error value of the result and stores it.
+        if y_value is not None:
 
 
-        # create layers
-        self.weightsOne = np.random.randn(input_size, hidden_layer_size)
-        self.weightsTwo = np.random.randn(hidden_layer_size, hidden_layer_size)
-        self.weightsThree = np.random.randn(hidden_layer_size, output_size)
+            if np.argmax(result) == np.argmax(y_value):
+                self.correct += 1
+            else:
+                self.wrong += 1
 
-        self.bOne = [0] * hidden_layer_size
-        self.bTwo = [0] * hidden_layer_size
-        self.bThree = [0] * hidden_layer_size
-        self.bThree = [0] * output_size
+            self.results.append(result)
+            self.expected.append(y_value)
 
-    def get_results(self):
+        # Return the output of the last layer as our final result of the computation
+        return result
+
+
+    # Computes one iteration of backward prop for the network
+    def back_prop(self, expected):
+        for i in range(len(self.layers)):
+            # Start from the bottom layer, which is at the last index
+            layer = self.layers[len(self.layers) - (i + 1)]
+
+            # If i == 0, do an output backprop:
+            if i == 0:
+                layer.output_back_prop(expected)
+            else:
+                layer.hidden_back_prop()
+
+
+    # Takes a single input and returns the response of the network.
+    def predict(self, x_sample):
+        return self.forward_prop(x_sample)
+
+    # Adds a layer to the network with the provided parameters.
+    # activation: String. Relu, sigmoid, tanh, leaky_relu
+    # output_size: Int.
+    # input_size: Int. Only required for the first layer of the network.
+    # All layers after the first layer have their input sizes computed from the output
+    # of the previous layer.
+    def add_layer(self, activation, output_size, input_size=None):
+        # Unless this is the first layer, get the length of the last layer and set
+        # its output size to be the input size to the next layer.
+        if len(self.layers) > 0:
+            previous_layer = self.layers[len(self.layers) - 1]
+            new_layer = Layer(self, activation, previous_layer.output_size, output_size)
+
+            # Sets up the nodal links between the layers
+            new_layer.previous_layer = previous_layer
+            previous_layer.next_layer = new_layer
+
+            self.layers.append(new_layer)
+
+        # If this is the first layer, input_size must be provided.
+        else:
+            if input_size is None:
+                raise Exception("The input size of the first layer must be provided.")
+            self.layers.append(Layer(self, activation, input_size, output_size))
+
+    # Clears results from the previous run
+    def clear_results(self):
+        self.correct = 0
+        self.wrong = 0
+        self.results = []
+        self.expected = []
+
+
+    # Returns the input size
+    def get_input_size(self):
+        input_layer = self.layers[0]
+        return input_layer.input_size
+
+    # Returns the output size
+    def get_output_size(self):
+        output_layer = self.layers[len(self.layers) - 1]
+        return output_layer.output_size
+
+    # Returns architecture details and results of last run
+    def save_results(self):
 
         print("Getting results...")
 
-        predictions = []
-        # Convert predictions into binary class predictions
-        for vector in self.results:
-            maxIndex = np.argmax(vector)
-            newVec = [0] * self.output_size
-            newVec[maxIndex] = 1
-            predictions.append(newVec)
+        returnStr = f"\nRun finished at {datetime.datetime.now()}\n"
+        returnStr +=  f"--- Parameters --- " \
+                + f"\nLearning rate: {self.learning_function}" \
+                + f"\nNumber of Hidden Layers: {len(self.layers)} \n\nLayers:\n"
 
-        expected = self.expected
+        for i in range(len(self.layers)):
+            returnStr += f"Layer {i}: "
+            if i == 0:
+                returnStr += "Input Layer"
+            elif i == len(self.layers) - 1:
+                returnStr += "Output Layer"
+            else:
+                returnStr += "Hidden Layer"
+            returnStr += f"\nParameters: \n{self.layers[i].get_layer_string()}"
 
-        accuracy = 1 - (self.wrong / (self.wrong + self.correct))
-        print("Accuracy: " + str(accuracy))
-        # precision = precision_score(
-        #     y_true=expected,
-        #     y_pred=predictions)
-        # recall = recall_score(
-        #     y_true=expected,
-        #     y_pred=predictions)
-        # f1 = f1_score(
-        #     y_true=expected,
-        #     y_pred=predictions)
-        # l, m, n, support = precision_recall_fscore_support(
-        #     y_true=expected,
-        #     y_pred=predictions)
 
-        return (f"--- Parameters --- "
-                f"\nLearning rate: {self.learningRate}"
-                f"Activation: \n{self.hidden_activation}"
-                f"\nNumber of Hidden Layers: 2"
-                f"\nNumber of Neurons per Hidden Layer: {self.hidden_layer_size}"
-                f"\nFinal output weights: {self.weightsThree}"
-                f"\n\n--- Results --- "
-                f"\nAccuracy: {accuracy}")
-        # f"\nPrecision: {precision}"
-        # f"\nRecall: {recall}"
-        # f"\nF1 Score: {f1}"
-        # f"\nSupport: {support}")
+        metrics = Metrics.get_metrics(self.results, self.expected, self.labels)
+        returnStr += f"\n\n--- Results --- "
 
-    def run(self, xarray, yarray, training=True):
+        for i in range(len(metrics)):
+            entry = metrics[i]
+            if i == 0:
+                returnStr += "\n---Network Results---\n"
+            elif i == 1:
+                returnStr += "\n----Class Results---- \n"
+            else:
+                returnStr += "\n--------------------- \n"
+            for key in entry:
+                value = entry[key]
+                returnStr += f"{key}: {value}\n"
 
-        self.clear()
-        start = time.time()
-        i = 0
-        for (data, val) in zip(train_x, train_y):
-            learner.iterate(data, val, training)
-            i += 1
-            if i % 100 == 0:
-                sys.stdout.write(
-                    "Progress: %d%%  Running accuracy: %d%% \r"
-                    % ((i / len(data)),
-                       (1 - (learner.wrong / (learner.wrong + learner.correct)))))
+        with open('testresults.txt', 'w') as f:
+            f.write(returnStr)
 
-        print(f"Time elapsed: {time.time() - start}")
-
-        return self.get_results()
-
-    def iterate(self, x: np.ndarray, y: np.ndarray, train=True):
-
-        x = x.flatten()
-        self.data = x
-        wOne = self.weightsOne
-        wTwo = self.weightsTwo
-        wThree = self.weightsThree
-
-        bOne = self.bOne
-        bTwo = self.bTwo
-        bThree = self.bThree
-
-        LOneOut = np.dot(x, wOne) / self.input_size
-
-        # lTwo is a hidden layer that feeds everything through a tanh activation function before applying weights
-        # and sending the results to LThree
-        LTwo = self.hidden_activation(LOneOut)
-        LTwoOut = np.dot(LTwo, wTwo) / self.hidden_layer_size
-
-        LThree = self.output_activation(LTwoOut)
-        LThreeOut = np.dot(LThree, wThree) / self.hidden_layer_size
-
-        if np.argmax(LThreeOut) == np.argmax(y):
-            self.correct += 1
-        else:
-            self.wrong += 1
-
-        result = [0] * self.output_size
-        result[np.argmax(LThreeOut)] = 1
-        result = np.asarray(result)
-        y = np.asarray(y)
-        self.results.append(result)
-        self.expected.append(y)
-
-        if train:
-            self.backprop(LOneOut, LTwoOut, LThreeOut, y, result)
-
-    def backprop(self, LOneOut, LTwoOut, LThreeOut, expected, results):
-
-        wOne = self.weightsOne
-        wTwo = self.weightsTwo
-        wThree = self.weightsThree
-
-        bOne = self.bOne
-        bTwo = self.bTwo
-        bThree = self.bThree
-        bFour = self.bThree
-
-        prime1 = self.hidden_derivative(LOneOut).flatten()
-        prime2 = self.hidden_derivative(LTwoOut).flatten()
-        prime3 = self.output_derivative(LThreeOut).flatten()
-
-        # Calculating the deltas (The change in weight values relative to the input values)
-        # The first step of this is to calculate the overall error.
-
-        L3error = -(expected - results)
-        L3delta = L3error * prime3
-        L2delta = np.dot(L3delta, wThree.T) * prime2
-        L1delta = np.dot(L2delta, wTwo.T) * prime1
-
-        # Updating second hidden layer weights.
-        # We add an additional axis to LayerTwo and L3delta to enable the dot product.
-        # Then we subtract the resulting matrix of the dot product from the bottom layer of weights.
-        # Finally we round the resulting weights to 7 digits to keep things from exploding.
-
-        LTwoOut = LTwoOut[np.newaxis]
-        L3delta = L3delta[np.newaxis]
-        wThree -= np.dot(LTwoOut.T, L3delta * self.learningRate)
-        wThree = np.round(wThree, 7)
-
-        # Updating first hidden layer weights.
-        # We add an additional axis to LayerOne and L2delta to enable the dot product.
-        # Then we subtract the resulting matrix of the dot product from the bottom layer of weights.
-        # Finally we round the resulting weights to 7 digits to keep things from exploding.
-
-        LOneOut = LOneOut[np.newaxis]
-        L2delta = L2delta[np.newaxis]
-        wTwo -= np.dot(LOneOut.T, L2delta * self.learningRate)
-        wTwo = np.round(wTwo, 7)
-
-        # Updating input layer weights.
-        # We add an additional axis to the input data and L1delta to enable the dot product.
-        # Then we subtract the resulting matrix of the dot product from the bottom layer of weights.
-        # Finally we round the resulting weights to 7 digits to keep things from exploding.
-
-        data = self.data[np.newaxis]
-        L1delta = L1delta[np.newaxis]
-        wOne -= np.dot(data.T, L1delta * self.learningRate)
-        wOne = np.round(wOne, 7)
-
-        # Then, we set the stored weights equal to our newly adjusted weights and increment the
-
-        self.weightsThree = wThree
-        self.weightsTwo = wTwo
-        self.weightsOne = wOne
-
-    # Function for a static learning rate
-    def static_learning_rate(self):
-        return self.lrnRateModifier
-
-    # Reset results for this learner
-    def _clear(self):
-        self.correct = 0
-        self.wrong = 0
-
-        self.results = []
-        self.expected = []
+        return returnStr
 
 
 
+# Creates a neural network from a dictionary as defined in ModelParams.py
+def FromDictionary(params_in):
+
+    netparams = params_in["network"]
+    lrn_rate = netparams["learning_rate"]
+    modifier = netparams["lrn_rate_modifier"]
+    labels_in = netparams["labels"]
+
+    network = NeuralNetwork(lrn_rate, modifier, labels_in)
+    layers = params_in["layers"]
+
+    for layer in layers:
+        activation = layer.get("activation")
+        num_inputs = layer.get("n_inputs")
+        num_outputs = layer.get("n_outputs")
+
+        network.add_layer(activation, num_outputs, input_size=num_inputs)
+
+    return network
+
+    #     "network": {
+    #         "learning_rate": "constant",
+    #         "lrn_rate_modifier": 0.01,
+    #         "labels": ["NonDemented", "VeryMildDemented", "MildDemented", "ModerateDemented"]
+    #     },
+    #     "layers": [
+    #         {"activation": "relu",
+    #          "size": 256,
+    #          "n_inputs": 36100},
+    #         {"activation": "relu",
+    #          "size": 64},
+    #         {"activation": "sigmoid",
+    #          "size": 32,
+    #          "n_outputs": 4}
+    #     ]
+    #
+    # }
 
 
 if __name__ == "__main__":
 
-    train_x, train_y, test_x, test_y = load_data()
+    ##### START ACQUIRING ALZHEIMERS DATA #####
+    train_x, train_y, test_x, test_y = load_data(1.0)
+    n_inputs = train_x.shape[1]
+    n_outputs = train_y.shape[1]
+    labels = ["NonDemented", "VeryMildDemented", "MildDemented", "ModerateDemented"]
 
-    learner = NeuralNetwork(
-        hidden_activation="leaky_relu",
-        output_activation="sigmoid",
-        input_size=36100,
-        learning_rate="neg_linear_learn_rate",
-        output_size=4,
-        hidden_layer_size=16)
+    ##### END ACQUIRING ALZHEIMERS DATA #####
 
+
+    ##### START ACQUIRING MNIST DATA #####
     # (train_x, train_y), (test_x, test_y) = mnist.load_data()
     #
+    # # Convert y from integers into one-hot encoding
     # train_y_arr = []
     # for val in train_y:
     #     newVec = [0] * 10
     #     newVec[int(val)] = 1
     #     train_y_arr.append(newVec)
-    # train_y = train_y_arr
+    # train_y = np.asarray(train_y_arr)
     #
     # test_y_arr = []
     # for val in test_y:
     #     newVec = [0] * 10
     #     newVec[val] = 1
     #     test_y_arr.append(newVec)
-    # test_y = test_y_arr
-
-    # normalize values between 0 and 1
-    # train_x = np.array([np.divide(sample,255).flatten() for sample in train_x])
+    # test_y = np.asarray(test_y_arr)
+    #
+    # # Flatten image arrays
+    # train_x = [sample.flatten() for sample in train_x]
+    # test_x = [sample.flatten() for sample in test_x]
+    #
+    #
+    # # normalize values between 0 and 1
+    # train_x = np.array([np.divide(sample,255) for sample in train_x])
     # test_x = np.array([np.divide(sample,255) for sample in test_x])
+    #
+    # # Get output and input sizes
+    # n_inputs = train_x.shape[1]
+    # n_outputs = train_y.shape[1]
 
-    num_samples, dimension_x = train_x.shape
+    ##### STOP ACQUIRING MNIST DATA #####
 
-    n_inputs = dimension_x
+    train_x = np.array([np.divide(sample,255) for sample in train_x])
+    test_x = np.array([np.divide(sample,255) for sample in test_x])
 
-    # learner = OriginalLearner(
-    #     hidden_activation="relu",
-    #     output_activation="sigmoid",
-    #     input_size=n_inputs,
-    #     learning_rate=0.01,
-    #     output_size=10,
-    #     hidden_layer_size=32)
+    print(train_x[0])
 
+    for entry in ModelParams.param_list:
+        perceptron = FromDictionary(entry)
 
-    print("Beginning training iterations.")
-    print(learner.run(train_x, train_y, training=True))
-    print("Beginning testing iterations.")
-    print(learner.run(train_x, train_y, training=False))
+        print("Beginning training iterations.")
+        print(perceptron.train(train_x, train_y))
+        print("Beginning testing iterations.")
+        print(perceptron.test(test_x, test_y))
+

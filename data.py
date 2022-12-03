@@ -6,42 +6,45 @@ from PIL import Image
 import matplotlib.pyplot as plt
 from sklearn.neural_network import MLPClassifier
 
-def handle_folder(folder_name,k):
+
+def handle_folder(folder_name, k):
     list_dir = os.listdir(folder_name)
-    k = min(k,len(list_dir))
-    files = random.sample(list_dir,k)
-    
+    k = min(k, len(list_dir))
+    files = random.sample(list_dir, k)
+
     output = []
     for filename in files:
-        img = os.path.join(folder_name,filename)
+        img = os.path.join(folder_name, filename)
         with Image.open(img) as fp:
-            (left,upper,right,lower) = (0,0,190,190)
-            img_crop = fp.crop((left,upper,right,lower))
+            (left, upper, right, lower) = (0, 0, 190, 190)
+            img_crop = fp.crop((left, upper, right, lower))
             img_crop = img_crop.convert("L")
-            array = np.asarray(img_crop) 
+            array = np.asarray(img_crop)
             array = array.flatten()
             output.append(array)
 
     return output
 
-def randomize(X,y):
+
+def randomize(X, y):
     assert len(X) == len(y)
     rand_indices = np.arange(len(X))
     np.random.shuffle(rand_indices)
     X = X[rand_indices]
     y = y[rand_indices]
 
-    return X,y
+    return X, y
 
-def load_images_to_arrays(dir,k):
-    moderate_dir = os.path.join(dir,'ModerateDemented')
-    mild_dir = os.path.join(dir,'MildDemented')
-    very_mild_dir = os.path.join(dir,'VeryMildDemented')
-    non_dir = os.path.join(dir,'NonDemented')
+
+def load_images_to_arrays(dir, k):
+    moderate_dir = os.path.join(dir, 'ModerateDemented')
+    mild_dir = os.path.join(dir, 'MildDemented')
+    very_mild_dir = os.path.join(dir, 'VeryMildDemented')
+    non_dir = os.path.join(dir, 'NonDemented')
 
     X = []
     y = []
-    
+
     # Categorical array structure: 
     ## ModerateDemented = [0,0,0,1]
     ## MildDemented = [0,0,1,0]
@@ -49,58 +52,62 @@ def load_images_to_arrays(dir,k):
     ## NonDemented = [1,0,0,0]
 
     print("Loading moderate...")
-    moderate = handle_folder(moderate_dir,k)
+    moderate = handle_folder(moderate_dir, k)
     X += moderate
-    Y = [[0,0,0,1]] * len(moderate)
+    Y = [[0, 0, 0, 1]] * len(moderate)
     y += Y
 
     print("Loading mild...")
-    mild = handle_folder(mild_dir,k)
+    mild = handle_folder(mild_dir, k)
     X += mild
-    Y = [[0,0,1,0]] * len(mild)
+    Y = [[0, 0, 1, 0]] * len(mild)
     y += Y
 
     print("Loading very mild...")
-    very_mild = handle_folder(very_mild_dir,k)
+    very_mild = handle_folder(very_mild_dir, k)
     X += very_mild
-    Y = [[0,1,0,0]] * len(very_mild)
+    Y = [[0, 1, 0, 0]] * len(very_mild)
     y += Y
 
     print("Loading non...")
-    non = handle_folder(non_dir,k)
+    non = handle_folder(non_dir, k)
     X += non
-    Y = [[1,0,0,0]] * len(non)
+    Y = [[1, 0, 0, 0]] * len(non)
     y += Y
 
     X = np.array(X)
     y = np.array(y)
-    
+
     X, y = randomize(X, y)
     return X, y
 
-def load_training_data():
+
+def load_training_data(percentage):
     parent_dir = os.getcwd()
-    train_dir = os.path.join(parent_dir,'Images\data\\train')
-    trainX, trainY = load_images_to_arrays(train_dir,6000)
+    train_dir = os.path.join(parent_dir, 'Data\\AugmentedAlzheimerDataset')
+    trainX, trainY = load_images_to_arrays(train_dir, int(6000 * percentage))
     return trainX, trainY
 
-def load_testing_data():
+
+def load_testing_data(percentage):
     parent_dir = os.getcwd()
-    test_dir = os.path.join(parent_dir,'Images\data\\val')
-    testX, testY = load_images_to_arrays(test_dir,896)
+    test_dir = os.path.join(parent_dir, 'Data\\AugmentedAlzheimerDataset\\ValidationData')
+    testX, testY = load_images_to_arrays(test_dir, int(896 * percentage))
     return testX, testY
 
-def load_data():
+
+def load_data(percentage):
     print("Loading training data...")
-    trainX, trainY = load_training_data()
+    trainX, trainY = load_training_data(percentage)
     print("Loading testing data...")
-    testX, testY = load_testing_data()
+    testX, testY = load_testing_data(percentage)
 
     # normalize values between 0 and 1
-    trainX = np.array([np.divide(sample,255) for sample in trainX])
-    testX = np.array([np.divide(sample,255) for sample in testX])
+    # trainX = np.array([np.divide(sample, 255) for sample in trainX])
+    # testX = np.array([np.divide(sample, 255) for sample in testX])
 
     return trainX, trainY, testX, testY
+
 
 if __name__ == "__main__":
     trainX, trainY, testX, testY = load_data()
