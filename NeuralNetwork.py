@@ -109,7 +109,7 @@ class Layer:
 # lrn_rate_modifier: Int. Determines strength/rate of growth of learning rate function
 class NeuralNetwork:
 
-    def __init__(self, learning_rate, lrn_rate_modifier, labels=None):
+    def __init__(self, learning_rate, lrn_rate_modifier, output_filename="test_results.txt", labels=None):
 
 
         # Stores whether we are currently training
@@ -132,6 +132,9 @@ class NeuralNetwork:
         self.wrong = 0
         self.results = []
         self.expected = []
+
+        # Stores the output file of the run's results
+        self.output_filename = output_filename
 
     # Takes a list of inputs and trains the network with them
     def train(self, x_set, y_set):
@@ -164,7 +167,7 @@ class NeuralNetwork:
                 self.percent_complete = (i / self.sample_count)
                 sys.stdout.write("Progress: %d%%  \r" % self.percent_complete)
 
-                print(f"Percent complete: {self.percent_complete}\n")
+                print(f"Percent complete: {self.percent_complete}\r")
 
         print(f"Time elapsed: {time.time() - start}")
         accuracy = 1 - (self.wrong / (self.wrong + self.correct))
@@ -297,7 +300,7 @@ class NeuralNetwork:
                 value = entry[key]
                 returnStr += f"{key}: {value}\n"
 
-        with open('testresults.txt', 'w') as f:
+        with open(self.output_filename, 'w') as f:
             f.write(returnStr)
 
         return returnStr
@@ -305,14 +308,14 @@ class NeuralNetwork:
 
 
 # Creates a neural network from a dictionary as defined in ModelParams.py
-def FromDictionary(params_in):
+def FromDictionary(params_in, output_filename):
 
     netparams = params_in["network"]
     lrn_rate = netparams["learning_rate"]
     modifier = netparams["lrn_rate_modifier"]
     labels_in = netparams["labels"]
 
-    network = NeuralNetwork(lrn_rate, modifier, labels_in)
+    network = NeuralNetwork(lrn_rate, modifier, output_filename, labels_in)
     layers = params_in["layers"]
 
     for layer in layers:
@@ -392,8 +395,8 @@ if __name__ == "__main__":
 
     print(train_x[0])
 
-    for entry in ModelParams.param_list:
-        perceptron = FromDictionary(entry)
+    for entry in ModelParams.alzheimbers_param_list:
+        perceptron = FromDictionary(entry,"alzheimers_test_results.txt")
 
         print("Beginning training iterations.")
         print(perceptron.train(train_x, train_y))

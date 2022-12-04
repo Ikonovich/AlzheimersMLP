@@ -102,13 +102,13 @@ def get_accuracy(base_metric_dict):
 def get_total_accuracy(expected, results):
     correct = 0
     wrong = 0
-    for item in results:
-        choice = np.argmax(item)
-        for i in range(len(item)):
-            if i == choice:
-                correct += 1
-            else:
-                wrong += 1
+    for actual_val_array,expected_val_array in zip(results,expected):
+        actual_val = np.argmax(actual_val_array)
+        expected_val = np.argmax(expected_val_array)
+        if actual_val == expected_val:
+            correct += 1
+        else:
+            wrong += 1
     return correct / (correct + wrong)
 
 def get_macro_averaged_f1(base_metric_list):
