@@ -1,6 +1,6 @@
 # This class contains a list of dictionaries of model parameters
 
-alzheimbers_param_list = [
+alzheimers_param_list = [
     {
         "network": {
             "learning_rate": "constant",
@@ -10,12 +10,32 @@ alzheimbers_param_list = [
         "layers": [
             {"activation": "relu",
              "n_outputs": 16,
+             "bias": 0.00,
              "n_inputs": 36100},
             {"activation": "relu",
+             "bias": 0.00,
              "n_outputs": 16},
             {"activation": "sigmoid",
              "n_outputs": 4}
         ]
+    }]
+alzheimers_param_list_standoff = [{
+        "network": {
+            "learning_rate": "constant",
+            "lrn_rate_modifier": 0.01,
+            "labels": ["NonDemented", "VeryMildDemented", "MildDemented", "ModerateDemented"]
+        },
+        "layers": [
+            {"activation": "relu",
+             "bias": 0.001,
+             "n_inputs": 36100,
+             "n_outputs": 32},
+            {"activation": "relu",
+             "bias": 0.001,
+             "n_outputs": 32},
+            {"activation": "sigmoid",
+             "n_outputs": 4}
+        ]
     },
     {
         "network": {
@@ -25,9 +45,11 @@ alzheimbers_param_list = [
         },
         "layers": [
             {"activation": "relu",
+             "bias": False,
              "n_outputs": 256,
              "n_inputs": 36100},
             {"activation": "relu",
+             "bias": False,
              "n_outputs": 64},
             {"activation": "sigmoid",
              "n_outputs": 4}
@@ -41,13 +63,17 @@ alzheimbers_param_list = [
         },
         "layers": [
             {"activation": "relu",
+             "bias": False,
              "n_outputs": 256,
              "n_inputs": 36100},
             {"activation": "relu",
+             "bias": False,
              "n_outputs": 64},
             {"activation": "relu",
+             "bias": False,
              "n_outputs": 32},
             {"activation": "sigmoid",
+             "bias": False,
              "n_outputs": 4}
         ]
     },
