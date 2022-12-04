@@ -8,20 +8,18 @@ import math
 
 ########### BEGIN LEARNING RATE FUNCTIONS #########
 
-
 # Function for a static learning rate, used for convenience
 def constant_learning_rate(network):
     return network.lrn_rate_modifier
 
-
-# Defines a learning rate that decreases
-# as we near the end of the dataset.
-def neg_linear_learning_rate(modifier, iterations_complete, iterations_remaining):
-    pass
+# Learn rate decreases linearly as batch accuracy decreases.
+def inv_batch_accuracy_lrn_rate(network):
+    return (1 - network.last_batch_accuracy) * network.lrn_rate_modifier
 
 
 LEARNING_FUNCTION_MAP = {
-    "constant": constant_learning_rate
+    "constant": constant_learning_rate,
+    "inverse_batch_accuracy": inv_batch_accuracy_lrn_rate
 }
 
 ########### END LEARNING RATE FUNCTIONS #########

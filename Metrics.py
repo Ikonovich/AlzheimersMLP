@@ -13,7 +13,7 @@ def get_class_base_metrics(results, expected, labels):
 
     # Generate the list of TP/FP/TN/FN dictionaries
     classMetrics = list()
-    for i in range(len(results[0])):
+    for i in range(len(labels)):
         classMetrics.append({"Label": labels[i], "TP": 0, "FP": 0, "TN": 0, "FN": 0})
 
     # Now calculate the metrics
@@ -34,7 +34,7 @@ def get_class_base_metrics(results, expected, labels):
             classMetrics[actualIndex]["FP"] += 1
             for i in range(len(classMetrics)):
                 if i != predictedIndex and i != actualIndex:
-                    classMetrics[actualIndex]["TN"] += 1
+                    classMetrics[i]["TN"] += 1
 
     return classMetrics
 
@@ -102,13 +102,14 @@ def get_accuracy(base_metric_dict):
 def get_total_accuracy(expected, results):
     correct = 0
     wrong = 0
-    for actual_val_array,expected_val_array in zip(results,expected):
-        actual_val = np.argmax(actual_val_array)
-        expected_val = np.argmax(expected_val_array)
+    for sample, prediction in zip(results, expected):
+        actual_val = np.argmax(sample)
+        expected_val = np.argmax(prediction)
         if actual_val == expected_val:
             correct += 1
         else:
             wrong += 1
+    print(f"Correct: {correct}  Incorrect: {wrong}")
     return correct / (correct + wrong)
 
 def get_macro_averaged_f1(base_metric_list):

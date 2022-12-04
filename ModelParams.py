@@ -74,23 +74,22 @@ alzheimbers_param_list = [
 mnist_param_list = [
     {
         "network": {
-            "learning_rate": "constant",
-            "lrn_rate_modifier": 0.01,
+            "learning_rate": "inverse_batch_accuracy",
+            "lrn_rate_modifier": 0.1,
             "labels": ["0","1","2","3","4","5","6","7","8","9"]
         },
         "layers": [
-            {"activation": "relu",
+            {"activation": "sigmoid",
              "n_outputs": 16,
              "n_inputs": 784},
-            {"activation": "relu",
-             "n_outputs": 16},
             {"activation": "sigmoid",
              "n_outputs": 10}
         ]
-    },
-    {
+    }]
+
+mnist_param_list_standoff =[{
         "network": {
-            "learning_rate": "constant",
+            "learning_rate": "inverse_batch_accuracy",
             "lrn_rate_modifier": 0.01,
             "labels": ["0","1","2","3","4","5","6","7","8","9"]
         },

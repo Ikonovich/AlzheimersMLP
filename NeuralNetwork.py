@@ -47,7 +47,8 @@ class Layer:
         # Stores the last calculated delta
         self.last_delta = None
 
-        self.bias = [0] * output_size
+        # Stores the per-neuron bias
+        self.bias = np.zeros(output_size)
 
     # Handles forward propagation when given input data
     # The size of data_in must match the input size of this layer
@@ -62,7 +63,7 @@ class Layer:
             raise Exception("Invalid input size to layer.forward_prop.")
 
         self.last_input = input_in
-        self.last_output = (np.dot(input_in, self.weights) / self.input_size) #+ self.bias
+        self.last_output = (np.dot(input_in, self.weights) / self.input_size) + self.bias
         return self.last_output
 
     def get_output(self):
@@ -94,9 +95,9 @@ class Layer:
         adjustedInput = self.last_input[np.newaxis]
         adjustedDelta = self.last_delta[np.newaxis]
         weight_updates = np.dot(adjustedInput.T, adjustedDelta * self.network.learning_function(self.network))
-        # bias_updates = prime * self.network.learning_function(self.network) * 0.1
+        bias_updates = self.last_delta * self.network.learning_function(self.network) * 0.1
         self.weights -= weight_updates
-        # self.bias -= bias_updates
+        self.bias -= bias_updates
 
     def get_layer_string(self):
         return f"\nLayer Input Size: {self.input_size}" \
@@ -109,13 +110,15 @@ class Layer:
 # lrn_rate_modifier: Int. Determines strength/rate of growth of learning rate function
 class NeuralNetwork:
 
-    def __init__(self, learning_rate, lrn_rate_modifier, output_filename="test_results.txt", labels=None):
+    def __init__(self, learning_rate, lrn_rate_modifier, output_filename="test_results.txt", labels_in=None):
 
+        # Stores the last recorded batch accuracy
+        self.last_batch_accuracy = 0
 
         # Stores whether we are currently training
         self.is_training = False
 
-        self.labels = labels
+        self.labels = labels_in
         self.learning_function = Functions.LEARNING_FUNCTION_MAP[learning_rate]
         self.lrn_rate_modifier = lrn_rate_modifier
         self.layers = []
@@ -136,18 +139,20 @@ class NeuralNetwork:
         # Stores the output file of the run's results
         self.output_filename = output_filename
 
+
     # Takes a list of inputs and trains the network with them
-    def train(self, x_set, y_set):
-        return self.run(x_set, y_set, training=True)
+    def train(self, x_set, y_set, labels, detailed_output=False):
+        return self.run(x_set, y_set, labels, training=True)
 
     # Takes a list of inputs and tests the network with them,
     # without performing backprop
-    def test(self, x_set, y_set):
-        return self.run(x_set, y_set, training=False)
+    def test(self, x_set, y_set, labels, training=False):
+        return self.run(x_set, y_set, labels, training=False)
 
     # Runs through a full data set, either with training or not.
-    def run(self, x_set, y_set, training):
+    def run(self, x_set, y_set, labels, training):
         self.is_training = training
+        self.labels = labels
 
         # Clear results of previous run
         self.clear_results()
@@ -156,22 +161,26 @@ class NeuralNetwork:
 
         start = time.time()
         i = 0
+        batch_correct = 0
         for (sample, value) in zip(x_set, y_set):
             output = self.forward_prop(sample, value)
+            if output == True:
+                batch_correct += 1
             if training == True:
                 self.back_prop(value)
+
+            # Every batch, update the percent complete and batch accuracy.
             i += 1
-
-            # Update the percent completed and the running accuracy.
             if i % 1000 == 0:
-                self.percent_complete = (i / self.sample_count)
-                sys.stdout.write("Progress: %d%%  \r" % self.percent_complete)
-
-                print(f"Percent complete: {self.percent_complete}\r")
+                self.percent_complete = (i / self.sample_count) * 100
+                self.last_batch_accuracy = batch_correct/1000
+                print(f"{self.percent_complete}%: Batch {i}: Batch Accuracy: {self.last_batch_accuracy * 100}%",
+                      end="\r")
+                batch_correct = 0
 
         print(f"Time elapsed: {time.time() - start}")
         accuracy = 1 - (self.wrong / (self.wrong + self.correct))
-        print(f"Accuracy: {accuracy}")
+        print(f"Final Accuracy: {accuracy}")
 
         return self.save_results()
 
@@ -191,17 +200,18 @@ class NeuralNetwork:
         # If y value isn't none, gets the error value of the result and stores it.
         if y_value is not None:
 
-
-            if np.argmax(result) == np.argmax(y_value):
-                self.correct += 1
-            else:
-                self.wrong += 1
-
             self.results.append(result)
             self.expected.append(y_value)
 
+            if np.argmax(result) == np.argmax(y_value):
+                self.correct += 1
+                return True
+            else:
+                self.wrong += 1
+                return False
+
+
         # Return the output of the last layer as our final result of the computation
-        return result
 
 
     # Computes one iteration of backward prop for the network
@@ -313,9 +323,8 @@ def FromDictionary(params_in, output_filename):
     netparams = params_in["network"]
     lrn_rate = netparams["learning_rate"]
     modifier = netparams["lrn_rate_modifier"]
-    labels_in = netparams["labels"]
 
-    network = NeuralNetwork(lrn_rate, modifier, output_filename, labels_in)
+    network = NeuralNetwork(lrn_rate, modifier, output_filename)
     layers = params_in["layers"]
 
     for layer in layers:
@@ -345,50 +354,13 @@ def FromDictionary(params_in, output_filename):
     #
     # }
 
+# Run the alzheimers dataset through a bunch of models
+def run_alzheimers(print_result=False):
 
-if __name__ == "__main__":
-
-    ##### START ACQUIRING ALZHEIMERS DATA #####
     train_x, train_y, test_x, test_y = load_data(1.0)
     n_inputs = train_x.shape[1]
     n_outputs = train_y.shape[1]
     labels = ["NonDemented", "VeryMildDemented", "MildDemented", "ModerateDemented"]
-
-    ##### END ACQUIRING ALZHEIMERS DATA #####
-
-
-    ##### START ACQUIRING MNIST DATA #####
-    # (train_x, train_y), (test_x, test_y) = mnist.load_data()
-    #
-    # # Convert y from integers into one-hot encoding
-    # train_y_arr = []
-    # for val in train_y:
-    #     newVec = [0] * 10
-    #     newVec[int(val)] = 1
-    #     train_y_arr.append(newVec)
-    # train_y = np.asarray(train_y_arr)
-    #
-    # test_y_arr = []
-    # for val in test_y:
-    #     newVec = [0] * 10
-    #     newVec[val] = 1
-    #     test_y_arr.append(newVec)
-    # test_y = np.asarray(test_y_arr)
-    #
-    # # Flatten image arrays
-    # train_x = [sample.flatten() for sample in train_x]
-    # test_x = [sample.flatten() for sample in test_x]
-    #
-    #
-    # # normalize values between 0 and 1
-    # train_x = np.array([np.divide(sample,255) for sample in train_x])
-    # test_x = np.array([np.divide(sample,255) for sample in test_x])
-    #
-    # # Get output and input sizes
-    # n_inputs = train_x.shape[1]
-    # n_outputs = train_y.shape[1]
-
-    ##### STOP ACQUIRING MNIST DATA #####
 
     train_x = np.array([np.divide(sample,255) for sample in train_x])
     test_x = np.array([np.divide(sample,255) for sample in test_x])
@@ -399,7 +371,63 @@ if __name__ == "__main__":
         perceptron = FromDictionary(entry,"alzheimers_test_results.txt")
 
         print("Beginning training iterations.")
-        print(perceptron.train(train_x, train_y))
+        train_result = perceptron.train(train_x, train_y, labels=labels)
         print("Beginning testing iterations.")
-        print(perceptron.test(test_x, test_y))
+        test_result = perceptron.test(test_x, test_y, labels=labels)
+
+        if print_result == True:
+            print(f"Training Result: {train_result}")
+            print(f"Testing Result: {test_result}")
+
+
+def run_mnist(print_result=False):
+
+    (train_x, train_y), (test_x, test_y) = mnist.load_data()
+
+    # Convert y from integers into one-hot encoding
+    train_y_arr = []
+    for val in train_y:
+        newVec = [0] * 10
+        newVec[int(val)] = 1
+        train_y_arr.append(newVec)
+    train_y = np.asarray(train_y_arr)
+
+    test_y_arr = []
+    for val in test_y:
+        newVec = [0] * 10
+        newVec[val] = 1
+        test_y_arr.append(newVec)
+    test_y = np.asarray(test_y_arr)
+
+    # Flatten image arrays
+    train_x = [sample.flatten() for sample in train_x]
+    test_x = [sample.flatten() for sample in test_x]
+
+    # normalize values between 0 and 1
+    train_x = np.array([np.divide(sample, 255) for sample in train_x])
+    test_x = np.array([np.divide(sample, 255) for sample in test_x])
+
+    # Get output and input sizes
+    n_inputs = train_x.shape[1]
+    n_outputs = train_y.shape[1]
+
+    labels = [i for i in range(0, 10)]
+
+    for entry in ModelParams.mnist_param_list:
+        perceptron = FromDictionary(entry, "mnist_test_results.txt")
+
+        print("Beginning training iterations.")
+        train_result = perceptron.train(train_x, train_y, labels=labels)
+        print("Beginning testing iterations.")
+        test_result = perceptron.test(test_x, test_y, labels=labels)
+
+        if print_result == True:
+            print(f"Training Result: {train_result}")
+            print(f"Testing Result: {test_result}")
+
+if __name__ == "__main__":
+
+    # run_alzheimers()
+    run_mnist()
+
 
