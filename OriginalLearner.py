@@ -1,6 +1,6 @@
 import sys
 import time
-import Functions
+from Math import Functions
 
 import numpy as np
 from data import load_data

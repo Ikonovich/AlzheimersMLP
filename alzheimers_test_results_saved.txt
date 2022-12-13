@@ -1,0 +1,174 @@
+
+Run finished at 2022-12-04 14:44:19.737053
+--- Parameters --- 
+Learning rate: <function constant_learning_rate at 0x0000020FB86EFD90>
+Number of Hidden Layers: 3 
+
+Layers:
+Layer 0: Input Layer
+Parameters: 
+
+Layer Input Size: 36100
+Layer Output Size: 16
+Layer Activation: relu
+
+Dropout Rate: None
+Layer 1: Hidden Layer
+Parameters: 
+
+Layer Input Size: 16
+Layer Output Size: 16
+Layer Activation: relu
+
+Dropout Rate: None
+Layer 2: Output Layer
+Parameters: 
+
+Layer Input Size: 16
+Layer Output Size: 4
+Layer Activation: sigmoid
+
+Dropout Rate: None
+
+
+--- Results --- 
+---Network Results---
+Overall Accuracy: 0.5389922015596881
+Precision: 0.5389922015596881
+Recall: 0.5389922015596881
+Micro-Averaged F1 Score: 0.5389922015596881
+Macro-Averaged F1 Score: 0.48310306424287475
+Specificity:: 0.8463307338532293
+
+----Class Results---- 
+Label: : NonDemented
+Accuracy: 0.6820635872825435
+Precision: 0.4489414694894147
+Recall: 0.8046875
+F1 Score: 0.5763389288569145
+Specificity: 0.6369975389663659
+
+--------------------- 
+Label: : VeryMildDemented
+Accuracy: 0.7300539892021596
+Precision: 0.4090909090909091
+Recall: 0.010044642857142858
+F1 Score: 0.0196078431372549
+Specificity: 0.994667760459393
+
+--------------------- 
+Label: : MildDemented
+Accuracy: 0.764247150569886
+Precision: 0.5611111111111111
+Recall: 0.5636160714285714
+F1 Score: 0.5623608017817372
+Specificity: 0.8379819524200164
+
+--------------------- 
+Label: : ModerateDemented
+Accuracy: 0.901619676064787
+Precision: 0.6972704714640199
+Recall: 0.8699690402476781
+F1 Score: 0.7741046831955923
+Specificity: 0.9092261904761905
+
+--------------------------------
+
+
+Run finished at 2022-12-04 17:38:56.932779
+--- Parameters --- 
+Learning rate: <function constant_learning_rate at 0x000001A18B323D90>
+Number of Hidden Layers: 3 
+
+Layers:
+Layer 0: Input Layer
+Parameters: 
+
+Layer Input Size: 36100
+Layer Output Size: 256
+Layer Activation: relu
+
+Bias Type: [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+
+Bias Modifier: 0.0
+
+Dropout Rate: None
+Layer 1: Hidden Layer
+Parameters: 
+
+Layer Input Size: 256
+Layer Output Size: 64
+Layer Activation: relu
+
+Bias Type: [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+
+Bias Modifier: 0.0
+
+Dropout Rate: None
+Layer 2: Output Layer
+Parameters: 
+
+Layer Input Size: 64
+Layer Output Size: 4
+Layer Activation: sigmoid
+
+Bias Type: [0. 0. 0. 0.]
+
+Bias Modifier: 0
+
+Dropout Rate: None
+
+
+--- Results --- 
+---Network Results---
+Overall Accuracy: 0.5142030634988382
+Precision: 0.5142030634988382
+Recall: 0.5142030634988382
+Micro-Averaged F1 Score: 0.5142030634988382
+Macro-Averaged F1 Score: 0.48650178902455965
+Specificity:: 0.838067687832946
+
+----Class Results---- 
+Label: : NonDemented
+Accuracy: 0.7221985109309053
+Precision: 0.46610687022900765
+Recall: 0.5639083856667898
+F1 Score: 0.5103644266131728
+Specificity: 0.7768774325272763
+
+--------------------- 
+Label: : VeryMildDemented
+Accuracy: 0.7169820268411817
+Precision: 0.3073394495412844
+Recall: 0.14611419508326726
+F1 Score: 0.19806503628056973
+Specificity: 0.8964657483014399
+
+--------------------- 
+Label: : MildDemented
+Accuracy: 0.7256603594631764
+Precision: 0.46699307783217964
+Recall: 0.5127919911012235
+F1 Score: 0.48882212600512503
+Specificity: 0.7988275027082139
+
+--------------------- 
+Label: : ModerateDemented
+Accuracy: 0.8635652297624129
+Precision: 0.6896718146718147
+Recall: 0.8189111747851003
+F1 Score: 0.7487555671993712
+Specificity: 0.8783118849356548
+

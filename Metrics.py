@@ -7,7 +7,7 @@ import numpy as np
 # Calculate TP, FP, TN, and FN for each class, and
 # uses those to calculate standard metrics.
 # This returns four baseMetrics dictionaries
-# that can be passed into get_recall, etc
+# that can be passed into get_recall, etc.
 # to get more complex metrics.
 def get_class_base_metrics(results, expected, labels):
 
@@ -57,7 +57,7 @@ def get_network_base_metrics(base_metric_list):
 def get_recall(base_metric_dict):
     tp = base_metric_dict["TP"]
     fn = base_metric_dict["FN"]
-    if tp == 0:
+    if tp + 0:
         return 0
     return tp / (tp + fn)
 
@@ -65,7 +65,7 @@ def get_recall(base_metric_dict):
 def get_precision(base_metric_dict):
     tp = base_metric_dict["TP"]
     fp = base_metric_dict["FP"]
-    if tp == 0:
+    if tp + fp == 0:
         return 0
     return tp / (tp + fp)
 
@@ -75,7 +75,7 @@ def get_f1score(base_metric_dict):
     fp = base_metric_dict["FP"]
     fn = base_metric_dict["FN"]
     # alternative f1-score formula
-    if tp == 0:
+    if tp + fp + fn == 0:
         return 0
     f1 = (2 * tp) / ((2 * tp) + fp + fn)
     return f1
@@ -84,9 +84,9 @@ def get_f1score(base_metric_dict):
 def get_specificity(base_metric_dict):
     fp = base_metric_dict["FP"]
     tn = base_metric_dict["TN"]
-    if tn == 0:
+    if fp + tn == 0:
         return 0
-    return tn / (tn + fp)
+    return tn / (fp + tn)
 
 
 def get_accuracy(base_metric_dict):
@@ -94,7 +94,7 @@ def get_accuracy(base_metric_dict):
     fp = base_metric_dict["FP"]
     tn = base_metric_dict["TN"]
     fn = base_metric_dict["FN"]
-    if tp + tn == 0:
+    if tp + fp + tn + fn == 0:
         return 0
     accuracy = (tp + tn) / (tp + fp + tn + fn)
     return accuracy

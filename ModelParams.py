@@ -18,8 +18,7 @@ alzheimers_param_list = [
             {"activation": "sigmoid",
              "n_outputs": 4}
         ]
-    }]
-alzheimers_param_list_standoff = [{
+    }, {
         "network": {
             "learning_rate": "constant",
             "lrn_rate_modifier": 0.01,
@@ -31,6 +30,7 @@ alzheimers_param_list_standoff = [{
              "n_inputs": 36100,
              "n_outputs": 32},
             {"activation": "relu",
+             "bias_type": "constant",
              "bias": 0.001,
              "n_outputs": 32},
             {"activation": "sigmoid",
@@ -45,11 +45,11 @@ alzheimers_param_list_standoff = [{
         },
         "layers": [
             {"activation": "relu",
-             "bias": False,
+             "bias": 0.0,
              "n_outputs": 256,
              "n_inputs": 36100},
             {"activation": "relu",
-             "bias": False,
+             "bias": 0.0,
              "n_outputs": 64},
             {"activation": "sigmoid",
              "n_outputs": 4}
