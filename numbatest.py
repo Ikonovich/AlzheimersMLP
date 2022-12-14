@@ -5,37 +5,39 @@ import time
 
 from Math import Functions
 
-a = np.random.randn(1000, 1000).flatten()
-aa = np.random.randn(1000, 1000).flatten()
+a = np.random.randn(1000, 1000)
+aa = np.random.randn(1000, 1000)
 
 def normal(x):
-    return np.maximum(x, 0)
+    for i in range(100):
+        result = np.multiply(a, aa)
+        result = np.sum(result)
 
-
-@jit(nopython=True)
+#@jit(nopython=True)
 def go_fast(x):  # Function is compiled and runs in machine code
-    return np.maximum(x, 0)
 
-print(str(numba.typeof(Functions.sigmoid_two)))
+    for i in range(100):
+        result = a.ravel().dot(aa.ravel())
 
-# # Testing normal execution, without Numba
-# start = time.time()
-# normal(aa)
-# end = time.time()
-# print("Elapsed (without Numba) = %s" % (end - start))
-#
-# # First iteration of Numba. Numba will have to compile the code during this iteration.
-# start = time.time()
-# go_fast(a)
-# end = time.time()
-# print("Elapsed (with Numba compilation) = %s" % (end - start))
-#
-# # 2nd iteration with Numba. Compilation should be complete, this should be a lot faster.
-# start = time.time()
-# go_fast(aa)
-# end = time.time()
-# print("Elapsed (after Numba compilation) = %s" % (end - start))
-#
+
+# Testing normal execution, without Numba
+start = time.time()
+normal(aa)
+end = time.time()
+print("Elapsed normal = %s" % (end - start))
+
+# First iteration of Numba. Numba will have to compile the code during this iteration.
+start = time.time()
+go_fast(a)
+end = time.time()
+print("Elapsed gofast = %s" % (end - start))
+
+# 2nd iteration with Numba. Compilation should be complete, this should be a lot faster.
+start = time.time()
+go_fast(aa)
+end = time.time()
+print("Elapsed gofast (after Numba compilation) = %s" % (end - start))
+
 # # 3rd iteration with Numba. Compilation should be complete, this should be a lot faster.
 # start = time.time()
 # go_fast(aa)

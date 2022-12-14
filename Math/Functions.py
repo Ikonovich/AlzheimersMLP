@@ -2,7 +2,7 @@ import random
 
 import numpy as np
 # We are using Numba to improve the performance of some mathematical functions
-from numba import jit, float32, int32, int64
+from numba import jit, float32
 
 
 # This file contains activation functions and their derivatives, learning rate functions, and general helper
@@ -74,7 +74,6 @@ def relu(x):
 
 
 ### Calculate derivative of relu
-@jit(float32[:](float32[:]))
 def relu_prime(x):
     output = np.zeros(shape=(x.size,))
     for i, xi in enumerate(x):

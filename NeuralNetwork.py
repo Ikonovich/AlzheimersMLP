@@ -238,6 +238,9 @@ class NeuralNetwork:
                 bias_lrn_modifier=bias_lrn_modifier,
                 dropout_modifier=dropout_modifier)
 
+            # Set the reference to the previous layer
+            new_layer.previous_layer = previous_layer
+            previous_layer.next_layer = new_layer
             self.layers.append(new_layer)
 
         # If this is the first layer, input_size must be provided.
@@ -280,7 +283,7 @@ class NeuralNetwork:
 
         returnStr = f"\nRun finished at {datetime.datetime.now()}\n"
         returnStr +=  f"--- Parameters --- " \
-                + f"\nLearning rate: {self.learning_function}" \
+                + f"\nLearning rate: {self.learning_function.__name__}" \
                 + f"\nNumber of Hidden Layers: {len(self.layers)} \n\nLayers:\n"
 
         for i in range(len(self.layers)):
@@ -415,7 +418,7 @@ def run_mnist(print_result=False, k_folds=False, k=10):
         test_result = perceptron.test(test_x, test_y, labels=labels)
 
         if print_result == True:
-            print(f"Testing Result: {test_result}")
+            print(f"Testing Result: {test_result[2]}")
 
 if __name__ == "__main__":
 

@@ -1,10 +1,4 @@
-from random import random
-
-import numba
 import numpy as np
-import numba as nb
-from numba import int32, float32
-from numba.experimental import jitclass
 
 from Math import Functions
 
@@ -12,22 +6,6 @@ from Math import Functions
 # Represents a layer of a neural network
 from Layers.Layer import Layer
 
-# Defines the specifications of the parameters Numba is expected to operate on.
-spec = [
-    ('input_size', int32),
-    ('output_size', int32),
-    ('bias_lrn_modifier', float32),
-    ('dropout', float32),
-    ('weights', float32[:]),
-    ('activation', numba.typeof(Functions.sigmoid_two)),
-    ('derivative', numba.typeof(Functions.sigmoid_prime)),
-    ('last_input', float32[:]),
-    ('last_output', float32[:]),
-    ('last_delta', float32[:]),
-    ('bias', float32[:]),
-]
-
-@jitclass(spec)
 class DenseLayer:
     def __init__(
             self,
@@ -62,11 +40,7 @@ class DenseLayer:
         self.output_size = output_size
 
         # Initialize weights to random normally distributed values between -1 and 1
-        vals = []
-        for i in range(input_size * output_size):
-            vals.append(random.uniform(-1, 1))
-        return np.asarray(vals)
-        self.weights =
+        self.weights = np.random.default_rng().random((input_size, output_size))
         # Stores the last provided input
         self.last_input = None
         # Stores the last calculated output
@@ -74,12 +48,16 @@ class DenseLayer:
         # Stores the last calculated delta
         self.last_delta = None
 
+        # Store the nodal references to the previous and next layers, if existing
+        self.previous_layer = None
+        self.next_layer = None
+
         # Stores the per-neuron bias
         self.bias = np.zeros(output_size, dtype=np.float32)
 
     # Handles forward propagation when given input data
     # The size of data_in must match the input size of this layer
-    def forward_prop(self, data_in: float32[:]):
+    def forward_prop(self, data_in):
 
         input_in = data_in
 
@@ -87,14 +65,14 @@ class DenseLayer:
             raise Exception("Invalid input size to layer.forward_prop.")
 
         self.last_input = input_in
-        self.last_output = (np.dot(input_in, self.weights) / self.input_size) + self.bias
+        self.last_output = (np.matmul(input_in, self.weights) / self.input_size) + self.bias
         return self.last_output
 
     def get_output(self):
         return self.last_output
 
     # Performs backprop for the output layer. Takes in a list of expected results.
-    def output_back_prop(self, expected: float32[:], learn_rate: float32):
+    def output_back_prop(self, expected, learn_rate):
 
         result = [0] * self.output_size
         result[np.argmax(self.last_output)] = 1
@@ -106,16 +84,16 @@ class DenseLayer:
         self.last_delta = error * prime
         self.back_prop(learn_rate=learn_rate)
 
-    def hidden_back_prop(self, learn_rate: float32):
+    def hidden_back_prop(self, learn_rate):
         lower_layer = self.next_layer
-        prime = self.derivative(self.last_output).flatten()
-        self.last_delta = np.dot(lower_layer.last_delta, lower_layer.weights.T) * prime
+        prime = self.derivative(self.last_output).ravel()
+        self.last_delta = np.matmul(lower_layer.last_delta, lower_layer.weights.T) * prime
         self.back_prop(learn_rate=learn_rate)
 
-    def back_prop(self, learn_rate: float32):
+    def back_prop(self, learn_rate):
         adjustedInput = self.last_input[np.newaxis]
         adjustedDelta = self.last_delta[np.newaxis]
-        weight_updates = np.dot(adjustedInput.T, adjustedDelta * learn_rate)
+        weight_updates = np.matmul(adjustedInput.T, adjustedDelta * learn_rate)
         bias_updates = self.last_delta * learn_rate * self.bias_lrn_modifier
         self.weights -= weight_updates
         self.bias -= bias_updates
@@ -123,6 +101,6 @@ class DenseLayer:
     def get_layer_string(self):
         return f"\nLayer Input Size: {self.input_size}" \
                + f"\nLayer Output Size: {self.output_size}" \
-               + f"\nLayer Activation: {self.activation_string}\n" \
+               + f"\nLayer Activation: {self.activation.__name__}\n" \
                + f"\nBias Modifier: {self.bias_lrn_modifier}\n" \
                + f"\nDropout Rate: None\n"

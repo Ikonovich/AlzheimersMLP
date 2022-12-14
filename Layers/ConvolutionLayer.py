@@ -53,14 +53,30 @@ class ConvolutionalLayer:
     def forward_prop(self, data_in: np.array):
 
         # Iterate over the input data with each filter
-        output = np.asarray([])
-        for i in range(len(self.filters)):
-            pass
+        output = []
+        for filter in self.filters:
+            output.append(self.convolve(data_in, filter))
 
 
-    def convolve(self, data, kernel):
+    def convolve(self, data, kernel, stride_x=1, stride_y=1):
         # Flip the filter matrix
         kernel = np.flipud(np.fliplr(kernel))
+
+        # Store the indices to start the next element-wise multiplication at
+        x_index = 0
+        y_index = 0
+
+        # Store how big each slice of the input data should be in each dimension
+        x_size = kernel.shape[0]
+        y_size = kernel.shape[1]
+
+        # Get a view of the numpy array from the relevant indices to the size of the
+        # array. This does NOT copy any data.
+        elements = data[x_index:x_size, y_index, y_size]
+
+
+
+
 
 
 
