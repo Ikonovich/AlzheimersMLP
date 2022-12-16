@@ -6,19 +6,32 @@ from Math import Functions
 # Represents a layer of a neural network
 from Layers.Layer import Layer
 
-class DenseLayer:
+class DenseLayer(Layer):
     def __init__(
             self,
-            activation,
-            derivative,
-            input_size,
             output_size,
             bias_lrn_modifier=0.0,
-            dropout_modifier=0.0):
+            dropout_modifier=0.0,
+            activation_string: str = "None",
+            previous_layer=None,
+            input_size=None,):
 
-        # Set the dropout rate and activation function
+        # If we're given an input size, set it and create weights.
+        # Otherwise, this must be done before running the network.
+
+        self.weights = None
+        if input_size is not None:
+            self.set_input_size(input_size)
+
+        # Set the input and output sizes, dropout rate, and activation function
         # Also initializes a pretty printer as pprint
-        # super('Layer').__init__(activation, dropout_modifier)
+        super().__init__(
+            input_size=input_size,
+            output_size=output_size,
+            dropout_modifier=dropout_modifier,
+            activation_string=activation_string,
+            previous_layer=previous_layer)
+
 
         # The bias learning modifier, applied on top of the
         # regular learning rate. I.E: Setting to 0.1 will cause the learning rate to
@@ -29,37 +42,28 @@ class DenseLayer:
         else:
             self.bias_lrn_modifier = bias_lrn_modifier
 
-        # defines the drop-out rate
-        self.dropout = dropout_modifier
-
-        # Uses the passed in activation name to acquire the
-        # activation function and its derivative from the map
-        self.activation = activation  # Functions.ACTIVATION_FUNCTION_MAP[activation][0]
-        self.derivative = derivative  # Functions.ACTIVATION_FUNCTION_MAP[activation][1]
-        self.input_size = input_size
-        self.output_size = output_size
-
-        # Initialize weights to random normally distributed values between -1 and 1
-        self.weights = np.random.default_rng().random((input_size, output_size))
-        # Stores the last provided input
-        self.last_input = None
-        # Stores the last calculated output
-        self.last_output = None
-        # Stores the last calculated delta
-        self.last_delta = None
-
-        # Store the nodal references to the previous and next layers, if existing
-        self.previous_layer = None
-        self.next_layer = None
-
         # Stores the per-neuron bias
         self.bias = np.zeros(output_size, dtype=np.float32)
+
+
+    def set_input_size(self, input_size):
+        # Flatten multi-dimensional input sizes
+        if type(input_size) is tuple:
+            size = 1
+            for i in range(len(input_size)):
+                size = size * input_size[i]
+            input_size = size
+
+        self.input_size = input_size
+        # Initialize weights to random normally distributed values between -1 and 1
+        self.weights = np.random.default_rng().random((input_size, self.output_size))
+
 
     # Handles forward propagation when given input data
     # The size of data_in must match the input size of this layer
     def forward_prop(self, data_in):
 
-        input_in = data_in
+        input_in = data_in.ravel()
 
         if len(input_in) != self.input_size:
             raise Exception("Invalid input size to layer.forward_prop.")
@@ -79,7 +83,7 @@ class DenseLayer:
 
         # The results are the last output of this layer
         error = -(expected - self.last_output)
-        prime = self.derivative(self.last_output)  # .flatten()
+        prime = self.derivative(self.last_output)
 
         self.last_delta = error * prime
         self.back_prop(learn_rate=learn_rate)

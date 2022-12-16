@@ -6,6 +6,11 @@ from collections import deque
 from numba import int32, float32
 from numba.experimental import jitclass
 
+from Layers.Layer import Layer
+from Layers.DenseLayer import DenseLayer
+from Layers.ConvolutionLayer import ConvolutionalLayer
+
+
 from Math import Functions
 
 from keras.datasets import mnist
@@ -14,7 +19,6 @@ import numpy as np
 
 import Metrics
 import ModelParams
-from Layers.DenseLayer import DenseLayer
 from Process import shuffle, split, kfold_merge
 from data import load_data
 
@@ -218,12 +222,7 @@ class NeuralNetwork:
     # input_size: Int. Only required for the first layer of the network.
     # All layers after the first layer have their input sizes computed from the output
     # of the previous layer.
-    def add_layer(self, activation, output_size, bias_lrn_modifier=0, dropout_modifier=0, input_size=None):
-
-        # Use the activation string to get the activation function and derivative
-        # from the map
-        activation_func = Functions.ACTIVATION_FUNCTION_MAP[activation][0]
-        derivative_func = Functions.ACTIVATION_FUNCTION_MAP[activation][1]
+    def add_layer(self, activation_string, bias_lrn_modifier=0, dropout_modifier=0, input_size=None, output_size=None):
 
         # Unless this is the first layer, get the length of the last layer and set
         # its output size to be the input size to the next layer.
@@ -231,29 +230,43 @@ class NeuralNetwork:
             previous_layer = self.layers[len(self.layers) - 1]
 
             new_layer = DenseLayer(
-                activation=activation_func,
-                derivative=derivative_func,
+                activation_string=activation_string,
+                previous_layer=previous_layer,
                 input_size=previous_layer.output_size,
                 output_size=output_size,
                 bias_lrn_modifier=bias_lrn_modifier,
                 dropout_modifier=dropout_modifier)
 
-            # Set the reference to the previous layer
-            new_layer.previous_layer = previous_layer
+            # Set the reference in the previous layer
             previous_layer.next_layer = new_layer
             self.layers.append(new_layer)
 
-        # If this is the first layer, input_size must be provided.
         else:
             if input_size is None:
                 raise Exception("The input size of the first layer must be provided.")
             self.layers.append(
                 DenseLayer(
-                    activation=activation_func, derivative=derivative_func,
-                    input_size=input_size, output_size=output_size,
+                    activation_string=activation_string,
+                    input_size=input_size,
+                    output_size=output_size,
                     bias_lrn_modifier=bias_lrn_modifier,
                     dropout_modifier=dropout_modifier))
 
+
+    # Adds an already constructed layer to the network in the last position.
+    def add_completed_layer(self, new_layer: Layer):
+
+        # Unless this is the first layer, get the length of the last layer and set
+        # its output size to be the input size to the next layer, as well
+        # as connecting the this layer and the layer before it.
+        if len(self.layers) > 0:
+            previous_layer = self.layers[len(self.layers) - 1]
+
+            new_layer.set_input_size(previous_layer.output_size)
+            new_layer.next_layer = previous_layer
+            previous_layer.next_layer = new_layer
+
+        self.layers.append(new_layer)
 
     # Used to retrieve the learn rate for each iteration of backprop
     def get_learn_rate(self):
@@ -334,13 +347,13 @@ def FromDictionary(params_in, output_filename, input_size):
     layers = params_in["layers"]
 
     for layer in layers:
-        activation = layer.get("activation")
+        activation_string = layer.get("activation")
         num_outputs = layer.get("n_outputs")
         bias_modifier = layer.get("bias")
 
         # Input size is always passed but the network only uses it if it's the first layer in the network.
         network.add_layer(
-            activation=activation, input_size=input_size,
+            activation_string=activation_string, input_size=input_size,
             output_size=num_outputs, bias_lrn_modifier=bias_modifier,
             dropout_modifier=0)
 
@@ -392,16 +405,17 @@ def run_mnist(print_result=False, k_folds=False, k=10):
         test_y_arr.append(newVec)
     test_y = np.asarray(test_y_arr)
 
+    #### REMOVED TO TEST 2D INPUT HANDLING
     # Flatten image arrays
-    train_x = [sample.flatten() for sample in train_x]
-    test_x = [sample.flatten() for sample in test_x]
+    # train_x = [sample.flatten() for sample in train_x]
+    # test_x = [sample.flatten() for sample in test_x]
 
     # normalize values between 0 and 1
     train_x = np.array([np.divide(sample, 255) for sample in train_x])
     test_x = np.array([np.divide(sample, 255) for sample in test_x])
 
     # Get output and input sizes
-    n_inputs = train_x.shape[1]
+    n_inputs = train_x.shape[1] * train_x.shape[2]
     n_outputs = train_y.shape[1]
 
     labels = [i for i in range(0, 10)]
@@ -420,9 +434,84 @@ def run_mnist(print_result=False, k_folds=False, k=10):
         if print_result == True:
             print(f"Testing Result: {test_result[2]}")
 
+def run_conv_mnist(print_result=True, k_folds=False, k=1):
+    (train_x, train_y), (test_x, test_y) = mnist.load_data()
+
+    # Convert y from integers into one-hot encoding
+    train_y_arr = []
+    for val in train_y:
+        newVec = [0] * 10
+        newVec[int(val)] = 1
+        train_y_arr.append(newVec)
+    train_y = np.asarray(train_y_arr)
+
+    test_y_arr = []
+    for val in test_y:
+        newVec = [0] * 10
+        newVec[val] = 1
+        test_y_arr.append(newVec)
+    test_y = np.asarray(test_y_arr)
+
+    #### REMOVED TO TEST 2D INPUT HANDLING
+    # Flatten image arrays
+    # train_x = [sample.flatten() for sample in train_x]
+    # test_x = [sample.flatten() for sample in test_x]
+
+    # normalize values between 0 and 1
+    train_x = np.array([np.divide(sample, 255) for sample in train_x])
+    test_x = np.array([np.divide(sample, 255) for sample in test_x])
+
+    # Get output and input sizes
+    n_inputs = train_x.shape[1] * train_x.shape[2]
+    n_outputs = train_y.shape[1]
+
+    labels = [i for i in range(0, 10)]
+
+    perceptron = NeuralNetwork(
+        learning_function="constant",
+        lrn_rate_modifier=0.1,
+        output_filename="convmnist.txt",
+        labels_in=labels)
+
+    conv_layer = ConvolutionalLayer(
+        input_size=train_x[0].shape,
+        num_filters=4,
+        filter_size=(5, 5),
+        activation_string="relu")
+
+    hidden_layer = DenseLayer(
+        activation_string="relu",
+        output_size=16,
+        bias_lrn_modifier=0.0,
+        dropout_modifier=0)
+
+    output_layer = DenseLayer(
+        activation_string="sigmoid",
+        output_size=10,
+        bias_lrn_modifier=0.0,
+        dropout_modifier=0)
+
+    perceptron.add_completed_layer(conv_layer)
+    perceptron.add_completed_layer(hidden_layer)
+    perceptron.add_completed_layer(output_layer)
+
+
+    print("Beginning training iterations.")
+    if k_folds == True:
+        perceptron.k_folds(train_x, train_y, labels=labels, k=k)
+    else:
+        perceptron.train(train_x, train_y, labels=labels)
+    print("Beginning validation iterations.")
+    test_result = perceptron.test(test_x, test_y, labels=labels)
+
+    if print_result == True:
+        print(f"Testing Result: {test_result[2]}")
+
 if __name__ == "__main__":
 
     #run_alzheimers(print_result=True, k_folds=True, k=10)
 
-    run_mnist(print_result=True, k_folds=False)
+    #run_mnist(print_result=True, k_folds=False)
+
+    run_conv_mnist(print_result=True, k_folds=False)
 

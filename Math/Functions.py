@@ -1,5 +1,3 @@
-import random
-
 import numpy as np
 # We are using Numba to improve the performance of some mathematical functions
 from numba import jit, float32
@@ -10,7 +8,8 @@ from numba import jit, float32
 
 ########### BEGIN LEARNING RATE FUNCTIONS #########
 
-# Function for a static learning rate, used for convenience
+# Function for a static learning rate, used for convenience.
+
 def constant_learning_rate(network):
     return network.lrn_rate_modifier
 
@@ -28,30 +27,36 @@ LEARNING_FUNCTION_MAP = {
 
 ########### BEGIN ACTIVATION FUNCTIONS ##########
 
+# No activation function, just returns the original input.
+def no_activation(x: np.ndarray):
+    return x
+
+# Derivative of no activation function is zero, since it returns a constant.
+def no_activation_prime(x: np.ndarray):
+    return np.zeros(x.shape)
 
 ### Calculate tanh of x
-def tanh(x):
+def tanh(x: np.ndarray):
     x = np.round(x, 5)
     return np.divide((np.exp(2 * x) - 1.0), (np.exp(2 * x) + 1.0))
 
 
 ### Calculate derivative of tanh of x
-def tanh_prime(x):
+def tanh_prime(x: np.ndarray):
     x = np.round(x, 5)
     return 1.0 - np.square(x)
 
 
 ### Calculate sigmoid of x
-def sigmoid(x):
+def sigmoid(x: np.ndarray):
     return np.piecewise(x, [x > 0],
                         [lambda i: 1 / (1 + np.exp(-i)),
                          lambda i: np.exp(i) / (1 + np.exp(i))])
 
 
 ### Calculate sigmoid of x, different method
-@jit(float32[:](float32[:]), forceobj=True)
-def sigmoid_two(x):
-    result = []
+def sigmoid_two(x: np.ndarray):
+    result = [float32]
     for num in x:
         if num >= 0:
             result.append(1. / (1. + np.exp(-num)))
@@ -61,50 +66,48 @@ def sigmoid_two(x):
 
 
 ### Calculate derivative of sigmoid of x
-@jit(float32[:](float32[:]), forceobj=True)
-def sigmoid_prime(x):
+def sigmoid_prime(x: np.ndarray):
     sig = sigmoid(x)
     return sig * (1.0 - sig)
 
 
 ### Calculate relu
-@jit(float32[:](float32[:]))
-def relu(x):
+def relu(x: np.ndarray):
     return np.maximum(x, 0)
 
 
 ### Calculate derivative of relu
-def relu_prime(x):
-    output = np.zeros(shape=(x.size,))
+@jit(nopython=True)
+def relu_prime(x: np.ndarray):
+    result = np.zeros(shape=(x.size,))
     for i, xi in enumerate(x):
         if xi > 0:
-            output[i] = 1
-    return output.reshape(output.size, 1)
+            result[i] = 1
+    return result
 
 
 # calculate leaky relu
-@jit
-def leaky_relu(x):
+@jit(nopython=True)
+def leaky_relu(x: np.ndarray):
     results = []
     for num in x:
         if num > 0:
             results.append(num)
         else:
             results.append(0.01 * num)
-    return results
+    return np.asarray(results)
 
 
 ### Calculate derivative of leaky relu
 @jit(nopython=True)
-def leaky_relu_prime(x):
-    output = []
+def leaky_relu_prime(x: np.ndarray):
     output = np.zeros(shape=(x.size,))
     for i, xi in enumerate(x):
         if xi > 0:
             output[i] = 1
         else:
             output[i] = 0.01
-    return output.reshape(output.size, 1)
+    return output
 
 @jit(nopython=True, parallel=True)
 def softmax(x):
@@ -124,5 +127,6 @@ ACTIVATION_FUNCTION_MAP = {
     "relu": (relu, relu_prime),
     "sigmoid": (sigmoid_two, sigmoid_prime),
     "tanh": (tanh, tanh_prime),
-    "softmax": (softmax, softmax_prime)
+    "softmax": (softmax, softmax_prime),
+    "None": (no_activation, no_activation_prime)
 }

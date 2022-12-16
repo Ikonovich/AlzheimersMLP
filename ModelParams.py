@@ -100,14 +100,15 @@ alzheimers_param_list = [
 mnist_param_list = [
     {
         "network": {
-            "learning_rate": "inverse_batch_accuracy",
+            "learning_rate": "constant",
             "lrn_rate_modifier": 0.1,
             "labels": ["0","1","2","3","4","5","6","7","8","9"]
         },
         "layers": [
-            {"activation": "sigmoid",
+            {"activation": "relu",
              "n_outputs": 16,
-             "n_inputs": 784},
+             "n_inputs": 784,
+             "bias": 0.1},
             {"activation": "sigmoid",
              "n_outputs": 10}
         ]
