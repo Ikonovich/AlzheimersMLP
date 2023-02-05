@@ -31,8 +31,8 @@ class PoolingLayer(Layer):
         # Set the base parameters
         super('Layer').__init__(previous_layer=previous_layer,
                                 next_layer=next_layer,
-                                input_size=input_size,
-                                output_size=self.output_size,
+                                input_shape=input_size,
+                                output_shape=self.output_size,
                                 dropout_modifier=0,
                                 activation_string="None")
 
@@ -47,7 +47,7 @@ class PoolingLayer(Layer):
     def back_prop(self):
         lower_layer = self.next_layer
         # Get the elements that delta should be applied to - The maximums.
-        self.last_delta = np.matmul(lower_layer.last_delta, lower_layer.weights.T) * prime
+        self.last_delta = np.matmul(lower_layer.loss, lower_layer.weights.T) * prime
 
 # Stored outside the class to make Numba easy to use
 @jit(nopython=True)

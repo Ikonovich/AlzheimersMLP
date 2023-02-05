@@ -77,10 +77,10 @@ def relu(x: np.ndarray):
 
 
 ### Calculate derivative of relu
-@jit(nopython=True)
+# @jit(nopython=True)
 def relu_prime(x: np.ndarray):
-    result = np.zeros(shape=(x.size,))
-    for i, xi in enumerate(x):
+    result = np.zeros(shape=x.shape)
+    for i, xi in np.ndenumerate(x):
         if xi > 0:
             result[i] = 1
     return result
