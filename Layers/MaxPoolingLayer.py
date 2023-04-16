@@ -9,7 +9,7 @@ class PoolingType(Enum):
     Max = "Max",
     Average = "Average"
 
-class PoolingLayer(Layer):
+class GlobalMaxPoolingLayer(Layer):
 
     def __init__(self,
                  previous_layer,
@@ -33,7 +33,6 @@ class PoolingLayer(Layer):
                                 next_layer=next_layer,
                                 input_shape=input_size,
                                 output_shape=self.output_size,
-                                dropout_modifier=0,
                                 activation_string="None")
 
     # The functionality of this method is stored outside the class to allow the easy use
