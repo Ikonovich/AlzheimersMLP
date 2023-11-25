@@ -25,11 +25,11 @@ class TorchLinear(nn.Module):
         # add hidden layer, with relu activation function
         x = funct.relu(self.fc1(x))
         # add dropout layer
-        x = self.droput(x)
+        x = self.dropout(x)
         # add hidden layer, with relu activation function
         x = funct.relu(self.fc2(x))
         # add dropout layer
-        x = self.droput(x)
+        x = self.dropout(x)
         # add output layer
         self.fc3(x)
 

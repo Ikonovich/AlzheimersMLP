@@ -1,0 +1,913 @@
+
+Run finished at 2023-02-24 02:30:42.399384
+--- Parameters --- 
+Learning rate: constant_learning_rate
+Number of Hidden Layers: 3 
+
+Layers:
+Layer 0: Input Layer
+Parameters: 
+
+Layer Input Size: 784
+Layer Output Size: 32
+Layer Activation: relu
+
+Bias Modifier: 0.0
+
+Dropout Rate: None
+Layer 1: Hidden Layer
+Parameters: 
+
+Layer Input Size: 32
+Layer Output Size: 16
+Layer Activation: relu
+
+Bias Modifier: 0.0
+
+Dropout Rate: None
+Layer 2: Output Layer
+Parameters: 
+
+Layer Input Size: 16
+Layer Output Size: 10
+Layer Activation: sigmoid_two
+
+Bias Modifier: 0.0
+
+Dropout Rate: None
+
+
+--- Results --- 
+---Network Results---
+Overall Accuracy: 0.5796333333333333
+Precision: 0.5796333333333333
+Recall: 0
+Micro-Averaged F1 Score: 0.5796333333333333
+Macro-Averaged F1 Score: 0.49471472902924385
+Specificity:: 0.9532925925925926
+
+----Class Results---- 
+Label: : 0
+Accuracy: 0.9405
+Precision: 0.6230683090705487
+Recall: 0
+F1 Score: 0.7571098108586202
+Specificity: 0.9379333234990411
+
+--------------------- 
+Label: : 1
+Accuracy: 0.8988666666666667
+Precision: 0.5278698878888363
+Recall: 0
+F1 Score: 0.6878600823045268
+Specificity: 0.8876488933979634
+
+--------------------- 
+Label: : 2
+Accuracy: 0.9575
+Precision: 0.904435299497028
+Recall: 0
+F1 Score: 0.7562607532020647
+Specificity: 0.992246624128209
+
+--------------------- 
+Label: : 3
+Accuracy: 0.9230333333333334
+Precision: 0.5928469919469446
+Recall: 0
+F1 Score: 0.6843472317156528
+Specificity: 0.9361132790723603
+
+--------------------- 
+Label: : 4
+Accuracy: 0.9178
+Precision: 0.7674418604651163
+Recall: 0
+F1 Score: 0.3370967741935484
+Specificity: 0.992988153670148
+
+--------------------- 
+Label: : 5
+Accuracy: 0.9102666666666667
+Precision: 1.0
+Recall: 0
+F1 Score: 0.009565857247976454
+Specificity: 1.0
+
+--------------------- 
+Label: : 6
+Accuracy: 0.9544
+Precision: 0.7062043795620438
+Recall: 0
+F1 Score: 0.7984084880636605
+Specificity: 0.9583364140480591
+
+--------------------- 
+Label: : 7
+Accuracy: 0.8713333333333333
+Precision: 0.4396747967479675
+Recall: 0
+F1 Score: 0.5835131635735865
+Specificity: 0.871810133174615
+
+--------------------- 
+Label: : 8
+Accuracy: 0.9055
+Precision: 0.7974683544303798
+Recall: 0
+F1 Score: 0.08163265306122448
+Specificity: 0.9988179232388903
+
+--------------------- 
+Label: : 9
+Accuracy: 0.8800666666666667
+Precision: 0.3320505772402419
+Recall: 0
+F1 Score: 0.2513524760715772
+Specificity: 0.9550216562395883
+
+Run finished at 2023-02-27 23:47:56.375748
+--- Parameters --- 
+Learning rate: constant_learning_rate
+Number of Hidden Layers: 3 
+
+Layers:
+Layer 0: Input Layer
+Parameters: 
+
+Layer Input Size: 784
+Layer Output Size: 32
+Layer Activation: relu
+
+Bias Modifier: 0.0
+
+Dropout Rate: None
+Layer 1: Hidden Layer
+Parameters: 
+
+Layer Input Size: 32
+Layer Output Size: 16
+Layer Activation: relu
+
+Bias Modifier: 0.0
+
+Dropout Rate: None
+Layer 2: Output Layer
+Parameters: 
+
+Layer Input Size: 16
+Layer Output Size: 10
+Layer Activation: sigmoid_two
+
+Bias Modifier: 0.0
+
+Dropout Rate: None
+
+
+--- Results --- 
+---Network Results---
+Overall Accuracy: 0.6601
+Precision: 0.6601
+Recall: 0
+Micro-Averaged F1 Score: 0.6601
+Macro-Averaged F1 Score: 0.615391996552389
+Specificity:: 0.9622333333333334
+
+----Class Results---- 
+Label: : 0
+Accuracy: 0.9487333333333333
+Precision: 0.6649604467194044
+Recall: 0
+F1 Score: 0.7879790460435622
+Specificity: 0.9467534388404082
+
+--------------------- 
+Label: : 1
+Accuracy: 0.9141666666666667
+Precision: 0.5633316053222741
+Recall: 0
+F1 Score: 0.7168774051676745
+Specificity: 0.9053274389330136
+
+--------------------- 
+Label: : 2
+Accuracy: 0.9581333333333333
+Precision: 0.8661417322834646
+Recall: 0
+F1 Score: 0.7689477557027226
+Specificity: 0.9880268376765393
+
+--------------------- 
+Label: : 3
+Accuracy: 0.9262
+Precision: 0.6613949716139497
+Recall: 0
+F1 Score: 0.5956902848794741
+Specificity: 0.9690626157836235
+
+--------------------- 
+Label: : 4
+Accuracy: 0.9459666666666666
+Precision: 0.7240082079343365
+Recall: 0
+F1 Score: 0.7231426131511529
+Specificity: 0.9701872991244597
+
+--------------------- 
+Label: : 5
+Accuracy: 0.9300333333333334
+Precision: 0.7065073041168659
+Recall: 0
+F1 Score: 0.5034303288384196
+Specificity: 0.9837970600095312
+
+--------------------- 
+Label: : 6
+Accuracy: 0.9366666666666666
+Precision: 0.6216931216931217
+Recall: 0
+F1 Score: 0.7480106100795756
+Specificity: 0.9364350274114683
+
+--------------------- 
+Label: : 7
+Accuracy: 0.9360666666666667
+Precision: 0.6412337662337663
+Recall: 0
+F1 Score: 0.7424812030075187
+Specificity: 0.9424136390708755
+
+--------------------- 
+Label: : 8
+Accuracy: 0.9082
+Precision: 0.851528384279476
+Recall: 0
+F1 Score: 0.12404580152671756
+Specificity: 0.9987446926342994
+
+--------------------- 
+Label: : 9
+Accuracy: 0.9160333333333334
+Precision: 0.6559843034663179
+Recall: 0
+F1 Score: 0.44331491712707183
+Specificity: 0.9805214042364094
+
+Run finished at 2023-02-28 00:19:56.605082
+--- Parameters --- 
+Learning rate: constant_learning_rate
+Number of Hidden Layers: 4 
+
+Layers:
+Layer 0: Input Layer
+Parameters: 
+
+Layer Input Size: 784
+Layer Output Size: 32
+Layer Activation: relu
+
+Bias Modifier: 0.0
+
+Dropout Rate: None
+Layer 1: Hidden Layer
+Parameters: 
+
+Layer Input Size: 32
+Layer Output Size: 16
+Layer Activation: relu
+
+Bias Modifier: 0.0
+
+Dropout Rate: None
+Layer 2: Hidden Layer
+Parameters: 
+
+Layer Type: Dropout
+Dropout Rate: 0.5
+Layer Input Shape: 16
+Layer Output Shape: 16Layer 3: Output Layer
+Parameters: 
+
+Layer Input Size: 16
+Layer Output Size: 10
+Layer Activation: sigmoid_two
+
+Bias Modifier: 0.0
+
+Dropout Rate: None
+
+
+--- Results --- 
+---Network Results---
+Overall Accuracy: 0.36
+Precision: 0.36
+Recall: 0
+Micro-Averaged F1 Score: 0.36
+Macro-Averaged F1 Score: 0.2798036198657935
+Specificity:: 0.9288888888888889
+
+----Class Results---- 
+Label: : 0
+Accuracy: 0.9618333333333333
+Precision: 0.7523809523809524
+Recall: 0
+F1 Score: 0.8243056621144699
+Specificity: 0.9673234022104757
+
+--------------------- 
+Label: : 1
+Accuracy: 0.9798
+Precision: 0.9587458745874587
+Recall: 0
+F1 Score: 0.9055486284289277
+Specificity: 0.9953032238671375
+
+--------------------- 
+Label: : 2
+Accuracy: 0.8637666666666667
+Precision: 0.39475614228089473
+Recall: 0
+F1 Score: 0.5130465864410818
+Specificity: 0.8780163334688297
+
+--------------------- 
+Label: : 3
+Accuracy: 0.8653666666666666
+Precision: 0.3213474640423921
+Recall: 0
+F1 Score: 0.29597350531636746
+Specificity: 0.9333581118751162
+
+--------------------- 
+Label: : 4
+Accuracy: 0.9021666666666667
+Precision: 0
+Recall: 0.0
+F1 Score: 0.0
+Specificity: 1.0
+
+--------------------- 
+Label: : 5
+Accuracy: 0.9085
+Precision: 0
+Recall: 0.0
+F1 Score: 0.0
+Specificity: 1.0
+
+--------------------- 
+Label: : 6
+Accuracy: 0.9018666666666667
+Precision: 0
+Recall: 0.0
+F1 Score: 0.0
+Specificity: 1.0
+
+--------------------- 
+Label: : 7
+Accuracy: 0.8944666666666666
+Precision: 0
+Recall: 0.0
+F1 Score: 0.0
+Specificity: 1.0
+
+--------------------- 
+Label: : 8
+Accuracy: 0.5505666666666666
+Precision: 0.14558186062020673
+Recall: 0
+F1 Score: 0.24460754103871366
+Specificity: 0.5280335961099241
+
+--------------------- 
+Label: : 9
+Accuracy: 0.8916666666666667
+Precision: 0.07766990291262135
+Recall: 0
+F1 Score: 0.014554275318374773
+Specificity: 0.989448743104661
+
+Run finished at 2023-02-28 00:27:40.150865
+--- Parameters --- 
+Learning rate: constant_learning_rate
+Number of Hidden Layers: 4 
+
+Layers:
+Layer 0: Input Layer
+Parameters: 
+
+Layer Input Size: 784
+Layer Output Size: 32
+Layer Activation: relu
+
+Bias Modifier: 0.0
+
+Dropout Rate: None
+Layer 1: Hidden Layer
+Parameters: 
+
+Layer Input Size: 32
+Layer Output Size: 16
+Layer Activation: relu
+
+Bias Modifier: 0.0
+
+Dropout Rate: None
+Layer 2: Hidden Layer
+Parameters: 
+
+Layer Type: Dropout
+Dropout Rate: 0.5
+Layer Input Shape: 16
+Layer Output Shape: 16Layer 3: Output Layer
+Parameters: 
+
+Layer Input Size: 16
+Layer Output Size: 10
+Layer Activation: sigmoid_two
+
+Bias Modifier: 0.0
+
+Dropout Rate: None
+
+
+--- Results --- 
+---Network Results---
+Overall Accuracy: 0.6159166666666667
+Precision: 0.6159166666666667
+Recall: 0
+Micro-Averaged F1 Score: 0.6159166666666667
+Macro-Averaged F1 Score: 0.541806869655659
+Specificity:: 0.957324074074074
+
+----Class Results---- 
+Label: : 0
+Accuracy: 0.9671875
+Precision: 0.756501573629286
+Recall: 0
+F1 Score: 0.8529274442058082
+Specificity: 0.9660727474150664
+
+--------------------- 
+Label: : 1
+Accuracy: 0.9235625
+Precision: 0.6004693786320966
+Recall: 0
+F1 Score: 0.7454734651404786
+Specificity: 0.915947617144335
+
+--------------------- 
+Label: : 2
+Accuracy: 0.9107083333333333
+Precision: 0.6865558912386707
+Recall: 0
+F1 Score: 0.2978374836173001
+Specificity: 0.9903979639055993
+
+--------------------- 
+Label: : 3
+Accuracy: 0.8721666666666666
+Precision: 0.4295493439817456
+Recall: 0
+F1 Score: 0.5510024879262403
+Specificity: 0.8839880275644446
+
+--------------------- 
+Label: : 4
+Accuracy: 0.9448958333333334
+Precision: 0.7870396802740508
+Recall: 0
+F1 Score: 0.6758181149650693
+Specificity: 0.9827888519748985
+
+--------------------- 
+Label: : 5
+Accuracy: 0.909125
+Precision: 1.0
+Recall: 0
+F1 Score: 0.003654636820465966
+Specificity: 1.0
+
+--------------------- 
+Label: : 6
+Accuracy: 0.9259166666666667
+Precision: 0.5791543756145526
+Recall: 0
+F1 Score: 0.6986951364175563
+Specificity: 0.9308354687536071
+
+--------------------- 
+Label: : 7
+Accuracy: 0.951375
+Precision: 0.7109498264436731
+Recall: 0
+F1 Score: 0.7942887361184559
+Specificity: 0.9573874209155192
+
+--------------------- 
+Label: : 8
+Accuracy: 0.9082083333333333
+Precision: 0.678996036988111
+Recall: 0
+F1 Score: 0.18917924181082077
+Specificity: 0.9943909701544215
+
+--------------------- 
+Label: : 9
+Accuracy: 0.9186875
+Precision: 0.5848875216304557
+Recall: 0
+F1 Score: 0.6091919495343947
+Specificity: 0.9500393391030685
+
+Run finished at 2023-03-01 00:09:29.080870
+--- Parameters --- 
+Learning rate: constant_learning_rate
+Number of Hidden Layers: 6 
+
+Layers:
+Layer 0: Input Layer
+Parameters: 
+
+Layer Input Size: 784
+Layer Output Size: 32
+Bias Modifier: 0.0
+Layer 1: Hidden Layer
+Parameters: 
+
+Layer Type: ReLu
+Layer Input Shape: None
+Layer Output Shape: 32Layer 2: Hidden Layer
+Parameters: 
+
+Layer Input Size: 32
+Layer Output Size: 16
+Bias Modifier: 0.0
+Layer 3: Hidden Layer
+Parameters: 
+
+Layer Type: ReLu
+Layer Input Shape: None
+Layer Output Shape: 16Layer 4: Hidden Layer
+Parameters: 
+
+Layer Type: Dropout
+Dropout Rate: 0.5
+Layer Input Shape: 16
+Layer Output Shape: 16Layer 5: Output Layer
+Parameters: 
+
+Layer Input Size: 16
+Layer Output Size: 10
+Bias Modifier: 0.0
+
+
+--- Results --- 
+---Network Results---
+Overall Accuracy: 0.9384583333333333
+Precision: 0.9384583333333333
+Recall: 0
+Micro-Averaged F1 Score: 0.9384583333333333
+Macro-Averaged F1 Score: 0.9376288046184044
+Specificity:: 0.993162037037037
+
+----Class Results---- 
+Label: : 0
+Accuracy: 0.992625
+Precision: 0.9527027027027027
+Recall: 0
+F1 Score: 0.9633540372670808
+Specificity: 0.9946557468073293
+
+--------------------- 
+Label: : 1
+Accuracy: 0.9912708333333333
+Precision: 0.948663101604278
+Recall: 0
+F1 Score: 0.9621260056042664
+Specificity: 0.9932310151126988
+
+--------------------- 
+Label: : 2
+Accuracy: 0.9875
+Precision: 0.9373417721518987
+Recall: 0
+F1 Score: 0.9367488931056294
+Specificity: 0.9931335830212235
+
+--------------------- 
+Label: : 3
+Accuracy: 0.9837083333333333
+Precision: 0.9312091158472251
+Recall: 0
+F1 Score: 0.918609492089925
+Specificity: 0.9924416313092671
+
+--------------------- 
+Label: : 4
+Accuracy: 0.9880833333333333
+Precision: 0.9279865630904892
+Recall: 0
+F1 Score: 0.9392265193370166
+Specificity: 0.9920878411109317
+
+--------------------- 
+Label: : 5
+Accuracy: 0.985375
+Precision: 0.9232591189009948
+Recall: 0
+F1 Score: 0.9173923276064957
+Specificity: 0.9925898819870094
+
+--------------------- 
+Label: : 6
+Accuracy: 0.9886041666666666
+Precision: 0.9157050655192647
+Recall: 0
+F1 Score: 0.9448087983049137
+Specificity: 0.9900236100180547
+
+--------------------- 
+Label: : 7
+Accuracy: 0.9898125
+Precision: 0.9459728867623605
+Recall: 0
+F1 Score: 0.9509970938971841
+Specificity: 0.9937030926876873
+
+--------------------- 
+Label: : 8
+Accuracy: 0.9854375
+Precision: 0.9420548250501448
+Recall: 0
+F1 Score: 0.9236315961979679
+Specificity: 0.9940000923062722
+
+--------------------- 
+Label: : 9
+Accuracy: 0.9845
+Precision: 0.9586534116583822
+Recall: 0
+F1 Score: 0.9193932827735645
+Specificity: 0.9957634966200574
+
+Run finished at 2023-03-06 22:22:34.073090
+--- Parameters --- 
+Learning rate: constant_learning_rate
+Number of Hidden Layers: 6 
+
+Layers:
+Layer 0: Input Layer
+Parameters: 
+
+Layer Input Size: 784
+Layer Output Size: 32
+Bias Modifier: 0.0
+Layer 1: Hidden Layer
+Parameters: 
+
+Layer Type: ReLu
+Layer Input Shape: None
+Layer Output Shape: 32Layer 2: Hidden Layer
+Parameters: 
+
+Layer Input Size: 32
+Layer Output Size: 16
+Bias Modifier: 0.0
+Layer 3: Hidden Layer
+Parameters: 
+
+Layer Type: ReLu
+Layer Input Shape: None
+Layer Output Shape: 16Layer 4: Hidden Layer
+Parameters: 
+
+Layer Type: Dropout
+Dropout Rate: 0.5
+Layer Input Shape: 16
+Layer Output Shape: 16Layer 5: Output Layer
+Parameters: 
+
+Layer Input Size: 16
+Layer Output Size: 10
+Bias Modifier: 0.0
+
+
+--- Results --- 
+---Network Results---
+Overall Accuracy: 0.9393333333333334
+Precision: 0.9393333333333334
+Recall: 0
+Micro-Averaged F1 Score: 0.9393333333333334
+Macro-Averaged F1 Score: 0.9385844156102335
+Specificity:: 0.9932592592592593
+
+----Class Results---- 
+Label: : 0
+Accuracy: 0.9915208333333333
+Precision: 0.9340459862847923
+Recall: 0
+F1 Score: 0.9579067121729238
+Specificity: 0.9924461179514427
+
+--------------------- 
+Label: : 1
+Accuracy: 0.9932916666666667
+Precision: 0.9679985201627821
+Recall: 0
+F1 Score: 0.9701520207638117
+Specificity: 0.9959406823407949
+
+--------------------- 
+Label: : 2
+Accuracy: 0.9881458333333333
+Precision: 0.9476271911073109
+Recall: 0
+F1 Score: 0.9396926338102809
+Specificity: 0.9943343431306801
+
+--------------------- 
+Label: : 3
+Accuracy: 0.9817083333333333
+Precision: 0.8869013271783035
+Recall: 0
+F1 Score: 0.9130693069306931
+Specificity: 0.9863569920415787
+
+--------------------- 
+Label: : 4
+Accuracy: 0.9856041666666666
+Precision: 0.8993315778813045
+Recall: 0
+F1 Score: 0.9278027374360046
+Specificity: 0.9885394087534013
+
+--------------------- 
+Label: : 5
+Accuracy: 0.9849791666666666
+Precision: 0.9396802325581395
+Recall: 0
+F1 Score: 0.9149663875457011
+Specificity: 0.9942954019565168
+
+--------------------- 
+Label: : 6
+Accuracy: 0.9926875
+Precision: 0.9598148537765622
+Recall: 0
+F1 Score: 0.9629551451187335
+Specificity: 0.9955866722122094
+
+--------------------- 
+Label: : 7
+Accuracy: 0.9904583333333333
+Precision: 0.953852247969895
+Recall: 0
+F1 Score: 0.9546085232903865
+Specificity: 0.994576223841337
+
+--------------------- 
+Label: : 8
+Accuracy: 0.9864375
+Precision: 0.9489885664028144
+Recall: 0
+F1 Score: 0.9298718086825379
+Specificity: 0.99463769790824
+
+--------------------- 
+Label: : 9
+Accuracy: 0.9838333333333333
+Precision: 0.9592541436464088
+Recall: 0
+F1 Score: 0.9148188803512624
+Specificity: 0.9959059999074802
+
+Run finished at 2023-03-07 05:39:19.090089
+--- Parameters --- 
+Learning rate: constant_learning_rate
+Number of Hidden Layers: 6 
+
+Layers:
+Layer 0: Input Layer
+Parameters: 
+
+Layer Input Size: 784
+Layer Output Size: 32
+Bias Modifier: 0.0
+Layer 1: Hidden Layer
+Parameters: 
+
+Layer Type: ReLu
+Layer Input Shape: None
+Layer Output Shape: 32Layer 2: Hidden Layer
+Parameters: 
+
+Layer Input Size: 32
+Layer Output Size: 16
+Bias Modifier: 0.0
+Layer 3: Hidden Layer
+Parameters: 
+
+Layer Type: ReLu
+Layer Input Shape: None
+Layer Output Shape: 16Layer 4: Hidden Layer
+Parameters: 
+
+Layer Type: Dropout
+Dropout Rate: 0.5
+Layer Input Shape: 16
+Layer Output Shape: 16Layer 5: Output Layer
+Parameters: 
+
+Layer Input Size: 16
+Layer Output Size: 10
+Bias Modifier: 0.0
+
+
+--- Results --- 
+---Network Results---
+Overall Accuracy: 0.932875
+Precision: 0.932875
+Recall: 0
+Micro-Averaged F1 Score: 0.932875
+Macro-Averaged F1 Score: 0.9317813180454749
+Specificity:: 0.9925416666666667
+
+----Class Results---- 
+Label: : 0
+Accuracy: 0.9916666666666667
+Precision: 0.9495763587518082
+Recall: 0
+F1 Score: 0.9582898852971846
+Specificity: 0.9943582510578279
+
+--------------------- 
+Label: : 1
+Accuracy: 0.9923125
+Precision: 0.965312557966982
+Recall: 0
+F1 Score: 0.9657604157001021
+Specificity: 0.995611770779556
+
+--------------------- 
+Label: : 2
+Accuracy: 0.9870625
+Precision: 0.9362591431556949
+Recall: 0
+F1 Score: 0.9351842187663083
+Specificity: 0.9929404684751412
+
+--------------------- 
+Label: : 3
+Accuracy: 0.9836875
+Precision: 0.9174442190669371
+Recall: 0
+F1 Score: 0.9203377759690711
+Specificity: 0.9905570636412149
+
+--------------------- 
+Label: : 4
+Accuracy: 0.9866458333333333
+Precision: 0.9324469225820288
+Recall: 0
+F1 Score: 0.9313483988433116
+Specificity: 0.9927295388450353
+
+--------------------- 
+Label: : 5
+Accuracy: 0.9831875
+Precision: 0.9681528662420382
+Recall: 0
+F1 Score: 0.9004072565716401
+Specificity: 0.9972518035039505
+
+--------------------- 
+Label: : 6
+Accuracy: 0.989125
+Precision: 0.9156746031746031
+Recall: 0
+F1 Score: 0.9464725184577523
+Specificity: 0.9901820365921271
+
+--------------------- 
+Label: : 7
+Accuracy: 0.9892083333333334
+Precision: 0.9389653167990699
+Recall: 0
+F1 Score: 0.9492654260528893
+Specificity: 0.9926660613256967
+
+--------------------- 
+Label: : 8
+Accuracy: 0.9801666666666666
+Precision: 0.8549796156086197
+Recall: 0
+F1 Score: 0.9024590163934426
+Specificity: 0.9827844483879146
+
+--------------------- 
+Label: : 9
+Accuracy: 0.9826875
+Precision: 0.963249063670412
+Recall: 0
+F1 Score: 0.908288268403046
+Specificity: 0.9963666658952581

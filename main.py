@@ -1,6 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import torch
 from keras.datasets import mnist
+from torch.utils.data import SubsetRandomSampler
+
+from DataHandling.YouChooseDataset import YouChooseDataset
 from data import load_data
 from NeuralNetwork import FromDictionary
 import ModelParams
@@ -25,6 +29,14 @@ def alzheimers_experiment():
         print(perceptron.test(test_x, test_y))
 
 
-
 if __name__ == '__main__':
-    pass
+    dataset = YouChooseDataset()
+    dataset = dataset.shuffle()
+    train_dataset = dataset[:800000]
+    val_dataset = dataset[800000:900000]
+    test_dataset = dataset[900000:]
+    train_sampler = SubsetRandomSampler(train_dataset)
+
+    train_loader = torch.utils.data.DataLoader(train_dataset, sampler=train_sampler, batch_size=1, shuffle=True)
+
+    print(train_loader[0])

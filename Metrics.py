@@ -1,8 +1,15 @@
 import numpy as np
 
 
-# This class contains methods to assist with calculating metrics
+class Metrics:
 
+    # This class is used to store data a network and its performance, as well
+    # as to provide tools for calculating and displaying metrics
+
+    def __init__(self, model):
+        self.architecture = None
+
+# Contains methods to assist with calculating metrics
 
 # Calculate TP, FP, TN, and FN for each class, and
 # uses those to calculate standard metrics.
@@ -125,7 +132,7 @@ def get_macro_averaged_f1(base_metric_list):
 # creates a dictionary containing all available metrics
 # on a per-class basis.
 # Labels should be a list with the same size and order
-# as one entry in results or expected
+# as one num in results or expected
 def get_metrics(results, expected, labels):
     class_base_metrics = get_class_base_metrics(results, expected, labels)
 

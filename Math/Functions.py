@@ -1,10 +1,21 @@
 import numpy as np
-# We are using Numba to improve the performance of some mathematical functions
-from numba import jit, float32
+import torch
 
 
 # This file contains activation functions and their derivatives, learning rate functions, and general helper
 # functions.
+
+####### BEGIN LOSS FUNCTIONS #######
+
+
+def squared_error(expected, actual):
+    result = 0
+    for index in range(len(expected)):
+        minuend = expected[index]
+        subtrahend = actual[index]
+        result += torch.sum(torch.square(minuend - subtrahend))
+    return result
+
 
 ########### BEGIN LEARNING RATE FUNCTIONS #########
 
@@ -24,16 +35,6 @@ LEARNING_FUNCTION_MAP = {
 }
 
 ########### END LEARNING RATE FUNCTIONS #########
-
-########### BEGIN ACTIVATION FUNCTIONS ##########
-
-# No activation function, just returns the original input.
-def no_activation(x: np.ndarray):
-    return x
-
-# Derivative of no activation function is zero, since it returns a constant.
-def no_activation_prime(x: np.ndarray):
-    return np.zeros(x.shape)
 
 ### Calculate tanh of x
 def tanh(x: np.ndarray):
@@ -56,7 +57,7 @@ def sigmoid(x: np.ndarray):
 
 ### Calculate sigmoid of x, different method
 def sigmoid_two(x: np.ndarray):
-    result = [float32]
+    result = []
     for num in x:
         if num >= 0:
             result.append(1. / (1. + np.exp(-num)))
@@ -71,23 +72,7 @@ def sigmoid_prime(x: np.ndarray):
     return sig * (1.0 - sig)
 
 
-### Calculate relu
-def relu(x: np.ndarray):
-    return np.maximum(x, 0)
-
-
-### Calculate derivative of relu
-# @jit(nopython=True)
-def relu_prime(x: np.ndarray):
-    result = np.zeros(shape=x.shape)
-    for i, xi in np.ndenumerate(x):
-        if xi > 0:
-            result[i] = 1
-    return result
-
-
 # calculate leaky relu
-@jit(nopython=True)
 def leaky_relu(x: np.ndarray):
     results = []
     for num in x:
@@ -99,7 +84,6 @@ def leaky_relu(x: np.ndarray):
 
 
 ### Calculate derivative of leaky relu
-@jit(nopython=True)
 def leaky_relu_prime(x: np.ndarray):
     output = np.zeros(shape=(x.size,))
     for i, xi in enumerate(x):
@@ -109,24 +93,11 @@ def leaky_relu_prime(x: np.ndarray):
             output[i] = 0.01
     return output
 
-@jit(nopython=True, parallel=True)
 def softmax(x):
     output = np.exp(x - x.max())
     return output / np.sum(output)
 
-@jit
 def softmax_prime(x):
     # Reshape the 1-d softmax to 2-d so that np.dot will do the matrix multiplication
     s = x.reshape(-1, 1)
     return np.diagflat(s) - np.dot(s, s.T)
-
-
-# Map activations to functions
-ACTIVATION_FUNCTION_MAP = {
-    "leaky_relu": (leaky_relu, leaky_relu_prime),
-    "relu": (relu, relu_prime),
-    "sigmoid": (sigmoid_two, sigmoid_prime),
-    "tanh": (tanh, tanh_prime),
-    "softmax": (softmax, softmax_prime),
-    "None": (no_activation, no_activation_prime)
-}

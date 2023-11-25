@@ -1,107 +1,168 @@
-from enum import Enum
-
 import numpy as np
-from numba import jit
 
 from Layers.Layer import Layer
 
-class PoolingType(Enum):
-    Max = "Max",
-    Average = "Average"
-
-class GlobalMaxPoolingLayer(Layer):
+class MaxPoolingLayer(Layer):
 
     def __init__(self,
-                 previous_layer,
-                 next_layer,
-                 input_size: tuple[int, int],
-                 filter_size: tuple[int, int],
-                 step_size: tuple[int, int] = (1, 1),
-                 pooling_type: PoolingType = PoolingType.Max):
+                 previous_layer=None,
+                 next_layer=None,
+                 input_shape: tuple[int, int] = None,
+                 filter_shape: tuple[int, int] = (2, 2),
+                 step_size: tuple[int, int] = (2, 2)):
 
-        self.filter_size = filter_size
+        self.filter_shape = filter_shape
 
         self.step_size = step_size
 
+
         # Calculate the size of the output
-        output_size_x = int((input_size[0] - filter_size[1]) / step_size[0]) + 1
-        output_size_y = int((input_size[1] - filter_size[1]) / step_size[1]) + 1
-        self.output_size = (output_size_x, output_size_y)
+        output_size_z = input_shape[0]
+        output_size_x = int((input_shape[1] - filter_shape[1]) / step_size[0]) + 1
+        output_size_y = int((input_shape[2] - filter_shape[1]) / step_size[1]) + 1
+        output_shape = (output_size_z, output_size_x, output_size_y)
 
         # Set the base parameters
-        super('Layer').__init__(previous_layer=previous_layer,
-                                next_layer=next_layer,
-                                input_shape=input_size,
-                                output_shape=self.output_size,
-                                activation_string="None")
+        super().__init__(previous_layer=previous_layer,
+                         input_shape=input_shape,
+                         output_shape=output_shape)
 
-    # The functionality of this method is stored outside the class to allow the easy use
-    # of numba to improve performance.
     def forward_prop(self, data):
-        self.last_input = data
+        self.input = data
 
-        self.last_output = max_pool(data, self.filter_size, self.step_size)
-        return self.last_output
+        self.output = self.max_pool(data, self.filter_shape, self.step_size)
+        return self.output
+
+    def output_back_prop(self, learn_rate):
+        self.back_prop()
+
+    def hidden_back_prop(self, learn_rate):
+        self.back_prop()
 
     def back_prop(self):
         lower_layer = self.next_layer
         # Get the elements that delta should be applied to - The maximums.
-        self.last_delta = np.matmul(lower_layer.loss, lower_layer.weights.T) * prime
+        self.loss = lower_layer.delta
+        np.reshape(self.loss, self.output_shape)
+        self.delta = self.back_max_pool(self.input, self.loss, self.filter_shape, self.step_size)
 
-# Stored outside the class to make Numba easy to use
-@jit(nopython=True)
-def max_pool(
-        data,
-        filter_size: tuple[int, int] = (2, 2),
-        step_size: tuple[int, int] = (2, 2)):
+    @staticmethod
+    def max_pool(
+            data,
+            filter_size: tuple[int, int] = (2, 2),
+            step_size: tuple[int, int] = (2, 2)):
 
-    # Store the size of the data in each dimension
-    x_size_data = data.shape[0]
-    y_size_data = data.shape[1]
+        # Store the size of the data in each dimension
+        z_size_data = data.shape[0]
+        x_size_data = data.shape[1]
+        y_size_data = data.shape[2]
 
-    # Calculate the size of the output
-    output_size_x = int((data.shape[0] - filter_size[0]) / step_size[0]) + 1
-    output_size_y = int((data.shape[1] - filter_size[1]) / step_size[1]) + 1
+        # Ease of reading variables
+        x_size_kernel = filter_size[0]
+        y_size_kernel = filter_size[1]
+        stride_x = step_size[0]
+        stride_y = step_size[1]
 
-    # Initialize the output
-    output = np.zeros(shape=(output_size_x, output_size_y))
+        # Calculate the size of the output
+        output_size_z = z_size_data
+        output_size_x = int((x_size_data - x_size_kernel) / stride_x) + 1
+        output_size_y = int((y_size_data - y_size_kernel) / stride_y) + 1
 
-    # Initialize a binary map of maximum element.
-    # Indexes that were never a maximum will be 0, otherwise they will be one.
-    max_indices = np.zeros(shape=data.shape)
+        # Initialize the output
+        output = np.zeros(shape=(output_size_z, output_size_x, output_size_y))
+
+        # Run the convolution loop for each layer in the z-axis
+        # Store the index of the output to place the next calculation result.
+        z_output_index = 0
+        for z_index in range(z_size_data):
+            y_output_index = 0
+            # We iterate over the data in the x-axis, stopping when the filter runs
+            # up against the edge of the data, then going on to the next step of the y-axis.
+            for y_index in range(0, (y_size_data - y_size_kernel + 1), stride_y):
+                x_output_index = 0
+                for x_index in range(0, (x_size_data - x_size_kernel + 1), stride_x):
+                    # Get a view of the numpy array from the relevant indices to the size of the
+                    # array. This does NOT copy any data.
+                    # At the same time, flatten it using ravel, which also returns a view.
+                    elements = data[z_index, x_index:x_index + x_size_kernel, y_index: y_index + y_size_kernel].ravel()
+
+                    # Get the max element from the area being convolved
+                    new_max = np.max(elements, axis=None)
+                    # Store the result
+                    output[z_output_index][x_output_index][y_output_index] = new_max
+                    # Increment the x-index of the output by 1.
+                    x_output_index += 1
+
+                # Increment the y-index of the output by 1.
+                y_output_index += 1
+
+            return output
+
+    @staticmethod
+    def back_max_pool(
+            data_in,
+            loss,
+            filter_size: tuple[int, int] = (2, 2),
+            step_size: tuple[int, int] = (2, 2)):
+
+        # This function returns a matrix in the same shape as the input where the supplied networkLoss is
+        # placed at the index of the corresponding max value.
+
+        # make a deep copy of the data
+        data = np.copy(data_in)
+        # Store the size of the data in each dimension
+        z_size_data = data.shape[0]
+        x_size_data = data.shape[1]
+        y_size_data = data.shape[2]
+
+        # Ease of reading variables
+        x_size_kernel = filter_size[0]
+        y_size_kernel = filter_size[1]
+        stride_x = step_size[0]
+        stride_y = step_size[1]
 
 
-    # Ease of reading variables
-    x_size_kernel = filter_size[0]
-    y_size_kernel = filter_size[1]
-    stride_x = step_size[0]
-    stride_y = step_size[1]
 
+        # Run the convolution loop for each layer in the z-axis
 
-    # Store the index of the output to place the next calculation result.
-    y_output_index = 0
+        # Store the index of the output to place the next calculation result.
+        z_output_index = 0
+        for z_index in range(z_size_data):
+            y_output_index = 0
+            # We iterate over the data in the x-axis, stopping when the filter runs
+            # up against the edge of the data, then going on to the next step of the y-axis.
+            for y_index in range(0, (y_size_data - y_size_kernel + 1), stride_y):
+                x_output_index = 0
+                for x_index in range(0, (x_size_data - x_size_kernel + 1), stride_x):
+                    # Get a view of the numpy array from the relevant indices to the size of the
+                    # array. This does NOT copy any data.
+                    # At the same time, flatten it using ravel, which also returns a view.
+                    elements = data[z_index, x_index:x_index + x_size_kernel, y_index: y_index + y_size_kernel].ravel()
 
-    # Run the convolution loop
-    # We iterate over the data in the x-axis, stopping when the filter runs
-    # up against the edge of the data, then going on to the next step of the y-axis.
-    for y_index in range(0, (y_size_data - y_size_kernel + 1), stride_y):
-        x_output_index = 0
-        for x_index in range(0, (x_size_data - x_size_kernel + 1), stride_x):
-            # Get a view of the numpy array from the relevant indices to the size of the
-            # array. This does NOT copy any data.
-            # At the same time, flatten it using ravel, which also returns a view.
-            elements = data[x_index:x_index + x_size_kernel, y_index: y_index + y_size_kernel].ravel()
+                    # Get the max element from the area being convolved
+                    max_index = np.argmax(elements, axis=None)
 
-            # Get the max element from the area being convolved
-            result_index = np.argmax(elements, axis=None)
-            max_indices[result_index] += 1
-            result = elements[result_index]
-            # Store the result
-            output[x_output_index][y_output_index] = result
-            # Increment the x-index of the output by 1.
-            x_output_index += 1
+                    # Set everything but the max to zero
+                    for i in range(len(elements)):
+                        if i != max_index:
+                            elements[i] = 0
+                        else:
+                            elements[i] = loss[z_output_index][x_output_index][y_output_index]
 
-        # Increment the y-index of the output by 1.
-        y_output_index += 1
+                    # Reshape elements and set the corresponding portion of the data matrix to it
+                    elements = np.reshape(elements, filter_size)
+                    data[z_index, x_index:x_index + x_size_kernel, y_index: y_index + y_size_kernel] = elements
+                    # Increment the x-index of the output by 1.
+                    x_output_index += 1
 
-    return output, max_indices
+                # Increment the y-index of the output by 1.
+                y_output_index += 1
+
+            # Increment the z-index of the output by 1.
+            z_output_index += 1
+        return data
+
+    def get_layer_string(self):
+        return "Max Pooling Layer" \
+            + f"\nLayer Input Size: {self.input_shape}" \
+            + f"\nLayer Output Size: {self.output_shape}"

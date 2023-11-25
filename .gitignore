@@ -4,3 +4,11 @@ venv
 Images/data
 Data
 ADNI
+# Ignore cpython compiled files
+*pycache*
+*.pyc
+
+# Ignore large data files
+*.dat
+*.gz
+*ubyte

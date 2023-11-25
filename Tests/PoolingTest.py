@@ -1,6 +1,6 @@
 import numpy as np
 
-from Layers import PoolingLayer as pool
+from Layers import AveragePoolingLayer as pool
 from Layers import ConvolutionLayer as conv
 
 # Max pooling base case.
